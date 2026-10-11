@@ -1,0 +1,8 @@
+﻿n_coletas,binarias,variaveis,restricoes,custo,tempo_s,parou_no_limite,rotas
+4,24,34,76,2599.5,0.05,False,1
+5,35,47,109,4158.5,0.12,False,2
+6,48,62,148,4253.8,0.19,False,2
+7,63,79,193,5412.8,1.72,False,3
+8,80,98,244,5731.6,5.74,False,3
+9,99,119,301,5646.0,20.01,True,3
+10,120,142,364,5975.8,20.01,True,3
