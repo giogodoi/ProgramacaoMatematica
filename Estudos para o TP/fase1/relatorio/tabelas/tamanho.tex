@@ -1,0 +1,18 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Tamanho do modelo PLI do Nível 1 em função do escopo da instância real.}
+\label{tab:tamanho}
+\begin{tabular}{lrrrrr}
+\toprule
+Escopo & $n$ & $m$ & Binárias & Contínuas & Restrições (aprox.) \\
+\midrule
+instância de teste (Nível 1) & 8 & 5 & 104 & 16 & 174 \\
+50\% da produção do Sul/Sudoeste & 20 & 5 & 500 & 40 & 906 \\
+80\% da produção & 45 & 5 & 2.250 & 90 & 4.281 \\
+90\% da produção & 60 & 5 & 3.900 & 120 & 7.506 \\
+todos os produtores & 120 & 5 & 15.000 & 240 & 29.406 \\
+\bottomrule
+\end{tabular}
+\par\smallskip\footnotesize\raggedright Binárias $= n + n(n-1) + nm$; restrições $\approx 2n + m + 1 + 2n(n-1) + nm$ (fluxo, carga, tempo e terminal), conforme \texttt{02\_modelo\_PLI\_nivel1.md}.
+\end{table}
