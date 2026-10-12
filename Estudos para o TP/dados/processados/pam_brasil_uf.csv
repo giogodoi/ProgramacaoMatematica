@@ -1,0 +1,281 @@
+cod_local,local,variavel,unidade,ano,produto,valor_bruto,valor
+1,Brasil,Quantidade produzida,Toneladas,2021,arábica,1979430,1979430.0
+1,Brasil,Quantidade produzida,Toneladas,2021,canephora,1006151,1006151.0
+1,Brasil,Quantidade produzida,Toneladas,2022,arábica,2071598,2071598.0
+1,Brasil,Quantidade produzida,Toneladas,2022,canephora,1107578,1107578.0
+1,Brasil,Quantidade produzida,Toneladas,2023,arábica,2364611,2364611.0
+1,Brasil,Quantidade produzida,Toneladas,2023,canephora,983899,983899.0
+1,Brasil,Quantidade produzida,Toneladas,2024,arábica,2393487,2393487.0
+1,Brasil,Quantidade produzida,Toneladas,2024,canephora,988935,988935.0
+1,Brasil,Quantidade produzida,Toneladas,2025,arábica,2230589,2230589.0
+1,Brasil,Quantidade produzida,Toneladas,2025,canephora,1253765,1253765.0
+11,Rondônia,Quantidade produzida,Toneladas,2021,arábica,-,
+11,Rondônia,Quantidade produzida,Toneladas,2021,canephora,162482,162482.0
+11,Rondônia,Quantidade produzida,Toneladas,2022,arábica,-,
+11,Rondônia,Quantidade produzida,Toneladas,2022,canephora,201574,201574.0
+11,Rondônia,Quantidade produzida,Toneladas,2023,arábica,-,
+11,Rondônia,Quantidade produzida,Toneladas,2023,canephora,158667,158667.0
+11,Rondônia,Quantidade produzida,Toneladas,2024,arábica,-,
+11,Rondônia,Quantidade produzida,Toneladas,2024,canephora,165175,165175.0
+11,Rondônia,Quantidade produzida,Toneladas,2025,arábica,-,
+11,Rondônia,Quantidade produzida,Toneladas,2025,canephora,145746,145746.0
+12,Acre,Quantidade produzida,Toneladas,2021,arábica,-,
+12,Acre,Quantidade produzida,Toneladas,2021,canephora,2392,2392.0
+12,Acre,Quantidade produzida,Toneladas,2022,arábica,-,
+12,Acre,Quantidade produzida,Toneladas,2022,canephora,2570,2570.0
+12,Acre,Quantidade produzida,Toneladas,2023,arábica,-,
+12,Acre,Quantidade produzida,Toneladas,2023,canephora,2858,2858.0
+12,Acre,Quantidade produzida,Toneladas,2024,arábica,-,
+12,Acre,Quantidade produzida,Toneladas,2024,canephora,3079,3079.0
+12,Acre,Quantidade produzida,Toneladas,2025,arábica,-,
+12,Acre,Quantidade produzida,Toneladas,2025,canephora,6632,6632.0
+13,Amazonas,Quantidade produzida,Toneladas,2021,arábica,36,36.0
+13,Amazonas,Quantidade produzida,Toneladas,2021,canephora,320,320.0
+13,Amazonas,Quantidade produzida,Toneladas,2022,arábica,43,43.0
+13,Amazonas,Quantidade produzida,Toneladas,2022,canephora,420,420.0
+13,Amazonas,Quantidade produzida,Toneladas,2023,arábica,-,
+13,Amazonas,Quantidade produzida,Toneladas,2023,canephora,405,405.0
+13,Amazonas,Quantidade produzida,Toneladas,2024,arábica,-,
+13,Amazonas,Quantidade produzida,Toneladas,2024,canephora,1046,1046.0
+13,Amazonas,Quantidade produzida,Toneladas,2025,arábica,-,
+13,Amazonas,Quantidade produzida,Toneladas,2025,canephora,2461,2461.0
+14,Roraima,Quantidade produzida,Toneladas,2021,arábica,-,
+14,Roraima,Quantidade produzida,Toneladas,2021,canephora,-,
+14,Roraima,Quantidade produzida,Toneladas,2022,arábica,-,
+14,Roraima,Quantidade produzida,Toneladas,2022,canephora,-,
+14,Roraima,Quantidade produzida,Toneladas,2023,arábica,-,
+14,Roraima,Quantidade produzida,Toneladas,2023,canephora,-,
+14,Roraima,Quantidade produzida,Toneladas,2024,arábica,-,
+14,Roraima,Quantidade produzida,Toneladas,2024,canephora,-,
+14,Roraima,Quantidade produzida,Toneladas,2025,arábica,8,8.0
+14,Roraima,Quantidade produzida,Toneladas,2025,canephora,2,2.0
+15,Pará,Quantidade produzida,Toneladas,2021,arábica,-,
+15,Pará,Quantidade produzida,Toneladas,2021,canephora,189,189.0
+15,Pará,Quantidade produzida,Toneladas,2022,arábica,-,
+15,Pará,Quantidade produzida,Toneladas,2022,canephora,158,158.0
+15,Pará,Quantidade produzida,Toneladas,2023,arábica,-,
+15,Pará,Quantidade produzida,Toneladas,2023,canephora,179,179.0
+15,Pará,Quantidade produzida,Toneladas,2024,arábica,-,
+15,Pará,Quantidade produzida,Toneladas,2024,canephora,97,97.0
+15,Pará,Quantidade produzida,Toneladas,2025,arábica,-,
+15,Pará,Quantidade produzida,Toneladas,2025,canephora,134,134.0
+16,Amapá,Quantidade produzida,Toneladas,2021,arábica,-,
+16,Amapá,Quantidade produzida,Toneladas,2021,canephora,-,
+16,Amapá,Quantidade produzida,Toneladas,2022,arábica,-,
+16,Amapá,Quantidade produzida,Toneladas,2022,canephora,-,
+16,Amapá,Quantidade produzida,Toneladas,2023,arábica,-,
+16,Amapá,Quantidade produzida,Toneladas,2023,canephora,-,
+16,Amapá,Quantidade produzida,Toneladas,2024,arábica,-,
+16,Amapá,Quantidade produzida,Toneladas,2024,canephora,-,
+16,Amapá,Quantidade produzida,Toneladas,2025,arábica,-,
+16,Amapá,Quantidade produzida,Toneladas,2025,canephora,-,
+17,Tocantins,Quantidade produzida,Toneladas,2021,arábica,-,
+17,Tocantins,Quantidade produzida,Toneladas,2021,canephora,-,
+17,Tocantins,Quantidade produzida,Toneladas,2022,arábica,-,
+17,Tocantins,Quantidade produzida,Toneladas,2022,canephora,-,
+17,Tocantins,Quantidade produzida,Toneladas,2023,arábica,-,
+17,Tocantins,Quantidade produzida,Toneladas,2023,canephora,-,
+17,Tocantins,Quantidade produzida,Toneladas,2024,arábica,-,
+17,Tocantins,Quantidade produzida,Toneladas,2024,canephora,10,10.0
+17,Tocantins,Quantidade produzida,Toneladas,2025,arábica,-,
+17,Tocantins,Quantidade produzida,Toneladas,2025,canephora,10,10.0
+21,Maranhão,Quantidade produzida,Toneladas,2021,arábica,-,
+21,Maranhão,Quantidade produzida,Toneladas,2021,canephora,-,
+21,Maranhão,Quantidade produzida,Toneladas,2022,arábica,-,
+21,Maranhão,Quantidade produzida,Toneladas,2022,canephora,-,
+21,Maranhão,Quantidade produzida,Toneladas,2023,arábica,-,
+21,Maranhão,Quantidade produzida,Toneladas,2023,canephora,-,
+21,Maranhão,Quantidade produzida,Toneladas,2024,arábica,-,
+21,Maranhão,Quantidade produzida,Toneladas,2024,canephora,-,
+21,Maranhão,Quantidade produzida,Toneladas,2025,arábica,-,
+21,Maranhão,Quantidade produzida,Toneladas,2025,canephora,-,
+22,Piauí,Quantidade produzida,Toneladas,2021,arábica,-,
+22,Piauí,Quantidade produzida,Toneladas,2021,canephora,-,
+22,Piauí,Quantidade produzida,Toneladas,2022,arábica,-,
+22,Piauí,Quantidade produzida,Toneladas,2022,canephora,-,
+22,Piauí,Quantidade produzida,Toneladas,2023,arábica,-,
+22,Piauí,Quantidade produzida,Toneladas,2023,canephora,-,
+22,Piauí,Quantidade produzida,Toneladas,2024,arábica,-,
+22,Piauí,Quantidade produzida,Toneladas,2024,canephora,-,
+22,Piauí,Quantidade produzida,Toneladas,2025,arábica,-,
+22,Piauí,Quantidade produzida,Toneladas,2025,canephora,-,
+23,Ceará,Quantidade produzida,Toneladas,2021,arábica,442,442.0
+23,Ceará,Quantidade produzida,Toneladas,2021,canephora,41,41.0
+23,Ceará,Quantidade produzida,Toneladas,2022,arábica,437,437.0
+23,Ceará,Quantidade produzida,Toneladas,2022,canephora,11,11.0
+23,Ceará,Quantidade produzida,Toneladas,2023,arábica,481,481.0
+23,Ceará,Quantidade produzida,Toneladas,2023,canephora,13,13.0
+23,Ceará,Quantidade produzida,Toneladas,2024,arábica,495,495.0
+23,Ceará,Quantidade produzida,Toneladas,2024,canephora,15,15.0
+23,Ceará,Quantidade produzida,Toneladas,2025,arábica,598,598.0
+23,Ceará,Quantidade produzida,Toneladas,2025,canephora,17,17.0
+24,Rio Grande do Norte,Quantidade produzida,Toneladas,2021,arábica,-,
+24,Rio Grande do Norte,Quantidade produzida,Toneladas,2021,canephora,-,
+24,Rio Grande do Norte,Quantidade produzida,Toneladas,2022,arábica,-,
+24,Rio Grande do Norte,Quantidade produzida,Toneladas,2022,canephora,-,
+24,Rio Grande do Norte,Quantidade produzida,Toneladas,2023,arábica,4,4.0
+24,Rio Grande do Norte,Quantidade produzida,Toneladas,2023,canephora,-,
+24,Rio Grande do Norte,Quantidade produzida,Toneladas,2024,arábica,7,7.0
+24,Rio Grande do Norte,Quantidade produzida,Toneladas,2024,canephora,-,
+24,Rio Grande do Norte,Quantidade produzida,Toneladas,2025,arábica,16,16.0
+24,Rio Grande do Norte,Quantidade produzida,Toneladas,2025,canephora,346,346.0
+25,Paraíba,Quantidade produzida,Toneladas,2021,arábica,18,18.0
+25,Paraíba,Quantidade produzida,Toneladas,2021,canephora,-,
+25,Paraíba,Quantidade produzida,Toneladas,2022,arábica,24,24.0
+25,Paraíba,Quantidade produzida,Toneladas,2022,canephora,-,
+25,Paraíba,Quantidade produzida,Toneladas,2023,arábica,24,24.0
+25,Paraíba,Quantidade produzida,Toneladas,2023,canephora,-,
+25,Paraíba,Quantidade produzida,Toneladas,2024,arábica,26,26.0
+25,Paraíba,Quantidade produzida,Toneladas,2024,canephora,-,
+25,Paraíba,Quantidade produzida,Toneladas,2025,arábica,20,20.0
+25,Paraíba,Quantidade produzida,Toneladas,2025,canephora,-,
+26,Pernambuco,Quantidade produzida,Toneladas,2021,arábica,223,223.0
+26,Pernambuco,Quantidade produzida,Toneladas,2021,canephora,-,
+26,Pernambuco,Quantidade produzida,Toneladas,2022,arábica,596,596.0
+26,Pernambuco,Quantidade produzida,Toneladas,2022,canephora,-,
+26,Pernambuco,Quantidade produzida,Toneladas,2023,arábica,267,267.0
+26,Pernambuco,Quantidade produzida,Toneladas,2023,canephora,-,
+26,Pernambuco,Quantidade produzida,Toneladas,2024,arábica,573,573.0
+26,Pernambuco,Quantidade produzida,Toneladas,2024,canephora,-,
+26,Pernambuco,Quantidade produzida,Toneladas,2025,arábica,395,395.0
+26,Pernambuco,Quantidade produzida,Toneladas,2025,canephora,-,
+27,Alagoas,Quantidade produzida,Toneladas,2021,arábica,-,
+27,Alagoas,Quantidade produzida,Toneladas,2021,canephora,-,
+27,Alagoas,Quantidade produzida,Toneladas,2022,arábica,-,
+27,Alagoas,Quantidade produzida,Toneladas,2022,canephora,-,
+27,Alagoas,Quantidade produzida,Toneladas,2023,arábica,-,
+27,Alagoas,Quantidade produzida,Toneladas,2023,canephora,-,
+27,Alagoas,Quantidade produzida,Toneladas,2024,arábica,-,
+27,Alagoas,Quantidade produzida,Toneladas,2024,canephora,4,4.0
+27,Alagoas,Quantidade produzida,Toneladas,2025,arábica,-,
+27,Alagoas,Quantidade produzida,Toneladas,2025,canephora,4,4.0
+28,Sergipe,Quantidade produzida,Toneladas,2021,arábica,-,
+28,Sergipe,Quantidade produzida,Toneladas,2021,canephora,-,
+28,Sergipe,Quantidade produzida,Toneladas,2022,arábica,-,
+28,Sergipe,Quantidade produzida,Toneladas,2022,canephora,-,
+28,Sergipe,Quantidade produzida,Toneladas,2023,arábica,-,
+28,Sergipe,Quantidade produzida,Toneladas,2023,canephora,-,
+28,Sergipe,Quantidade produzida,Toneladas,2024,arábica,-,
+28,Sergipe,Quantidade produzida,Toneladas,2024,canephora,-,
+28,Sergipe,Quantidade produzida,Toneladas,2025,arábica,-,
+28,Sergipe,Quantidade produzida,Toneladas,2025,canephora,-,
+29,Bahia,Quantidade produzida,Toneladas,2021,arábica,75752,75752.0
+29,Bahia,Quantidade produzida,Toneladas,2021,canephora,134344,134344.0
+29,Bahia,Quantidade produzida,Toneladas,2022,arábica,94454,94454.0
+29,Bahia,Quantidade produzida,Toneladas,2022,canephora,145656,145656.0
+29,Bahia,Quantidade produzida,Toneladas,2023,arábica,94834,94834.0
+29,Bahia,Quantidade produzida,Toneladas,2023,canephora,137711,137711.0
+29,Bahia,Quantidade produzida,Toneladas,2024,arábica,91890,91890.0
+29,Bahia,Quantidade produzida,Toneladas,2024,canephora,127260,127260.0
+29,Bahia,Quantidade produzida,Toneladas,2025,arábica,92439,92439.0
+29,Bahia,Quantidade produzida,Toneladas,2025,canephora,187268,187268.0
+31,Minas Gerais,Quantidade produzida,Toneladas,2021,arábica,1343980,1343980.0
+31,Minas Gerais,Quantidade produzida,Toneladas,2021,canephora,15848,15848.0
+31,Minas Gerais,Quantidade produzida,Toneladas,2022,arábica,1373871,1373871.0
+31,Minas Gerais,Quantidade produzida,Toneladas,2022,canephora,23399,23399.0
+31,Minas Gerais,Quantidade produzida,Toneladas,2023,arábica,1714053,1714053.0
+31,Minas Gerais,Quantidade produzida,Toneladas,2023,canephora,21355,21355.0
+31,Minas Gerais,Quantidade produzida,Toneladas,2024,arábica,1663992,1663992.0
+31,Minas Gerais,Quantidade produzida,Toneladas,2024,canephora,23337,23337.0
+31,Minas Gerais,Quantidade produzida,Toneladas,2025,arábica,1534674,1534674.0
+31,Minas Gerais,Quantidade produzida,Toneladas,2025,canephora,29398,29398.0
+32,Espírito Santo,Quantidade produzida,Toneladas,2021,arábica,155538,155538.0
+32,Espírito Santo,Quantidade produzida,Toneladas,2021,canephora,684166,684166.0
+32,Espírito Santo,Quantidade produzida,Toneladas,2022,arábica,226489,226489.0
+32,Espírito Santo,Quantidade produzida,Toneladas,2022,canephora,724334,724334.0
+32,Espírito Santo,Quantidade produzida,Toneladas,2023,arábica,169604,169604.0
+32,Espírito Santo,Quantidade produzida,Toneladas,2023,canephora,651010,651010.0
+32,Espírito Santo,Quantidade produzida,Toneladas,2024,arábica,224649,224649.0
+32,Espírito Santo,Quantidade produzida,Toneladas,2024,canephora,657004,657004.0
+32,Espírito Santo,Quantidade produzida,Toneladas,2025,arábica,198941,198941.0
+32,Espírito Santo,Quantidade produzida,Toneladas,2025,canephora,871358,871358.0
+33,Rio de Janeiro,Quantidade produzida,Toneladas,2021,arábica,13229,13229.0
+33,Rio de Janeiro,Quantidade produzida,Toneladas,2021,canephora,5,5.0
+33,Rio de Janeiro,Quantidade produzida,Toneladas,2022,arábica,19308,19308.0
+33,Rio de Janeiro,Quantidade produzida,Toneladas,2022,canephora,14,14.0
+33,Rio de Janeiro,Quantidade produzida,Toneladas,2023,arábica,20086,20086.0
+33,Rio de Janeiro,Quantidade produzida,Toneladas,2023,canephora,60,60.0
+33,Rio de Janeiro,Quantidade produzida,Toneladas,2024,arábica,18950,18950.0
+33,Rio de Janeiro,Quantidade produzida,Toneladas,2024,canephora,67,67.0
+33,Rio de Janeiro,Quantidade produzida,Toneladas,2025,arábica,25675,25675.0
+33,Rio de Janeiro,Quantidade produzida,Toneladas,2025,canephora,216,216.0
+35,São Paulo,Quantidade produzida,Toneladas,2021,arábica,318395,318395.0
+35,São Paulo,Quantidade produzida,Toneladas,2021,canephora,83,83.0
+35,São Paulo,Quantidade produzida,Toneladas,2022,arábica,293251,293251.0
+35,São Paulo,Quantidade produzida,Toneladas,2022,canephora,126,126.0
+35,São Paulo,Quantidade produzida,Toneladas,2023,arábica,307221,307221.0
+35,São Paulo,Quantidade produzida,Toneladas,2023,canephora,132,132.0
+35,São Paulo,Quantidade produzida,Toneladas,2024,arábica,335206,335206.0
+35,São Paulo,Quantidade produzida,Toneladas,2024,canephora,104,104.0
+35,São Paulo,Quantidade produzida,Toneladas,2025,arábica,316196,316196.0
+35,São Paulo,Quantidade produzida,Toneladas,2025,canephora,166,166.0
+41,Paraná,Quantidade produzida,Toneladas,2021,arábica,53606,53606.0
+41,Paraná,Quantidade produzida,Toneladas,2021,canephora,-,
+41,Paraná,Quantidade produzida,Toneladas,2022,arábica,44867,44867.0
+41,Paraná,Quantidade produzida,Toneladas,2022,canephora,-,
+41,Paraná,Quantidade produzida,Toneladas,2023,arábica,41840,41840.0
+41,Paraná,Quantidade produzida,Toneladas,2023,canephora,-,
+41,Paraná,Quantidade produzida,Toneladas,2024,arábica,39961,39961.0
+41,Paraná,Quantidade produzida,Toneladas,2024,canephora,-,
+41,Paraná,Quantidade produzida,Toneladas,2025,arábica,43820,43820.0
+41,Paraná,Quantidade produzida,Toneladas,2025,canephora,-,
+42,Santa Catarina,Quantidade produzida,Toneladas,2021,arábica,-,
+42,Santa Catarina,Quantidade produzida,Toneladas,2021,canephora,-,
+42,Santa Catarina,Quantidade produzida,Toneladas,2022,arábica,-,
+42,Santa Catarina,Quantidade produzida,Toneladas,2022,canephora,-,
+42,Santa Catarina,Quantidade produzida,Toneladas,2023,arábica,-,
+42,Santa Catarina,Quantidade produzida,Toneladas,2023,canephora,-,
+42,Santa Catarina,Quantidade produzida,Toneladas,2024,arábica,-,
+42,Santa Catarina,Quantidade produzida,Toneladas,2024,canephora,-,
+42,Santa Catarina,Quantidade produzida,Toneladas,2025,arábica,-,
+42,Santa Catarina,Quantidade produzida,Toneladas,2025,canephora,-,
+43,Rio Grande do Sul,Quantidade produzida,Toneladas,2021,arábica,-,
+43,Rio Grande do Sul,Quantidade produzida,Toneladas,2021,canephora,-,
+43,Rio Grande do Sul,Quantidade produzida,Toneladas,2022,arábica,-,
+43,Rio Grande do Sul,Quantidade produzida,Toneladas,2022,canephora,-,
+43,Rio Grande do Sul,Quantidade produzida,Toneladas,2023,arábica,-,
+43,Rio Grande do Sul,Quantidade produzida,Toneladas,2023,canephora,-,
+43,Rio Grande do Sul,Quantidade produzida,Toneladas,2024,arábica,-,
+43,Rio Grande do Sul,Quantidade produzida,Toneladas,2024,canephora,-,
+43,Rio Grande do Sul,Quantidade produzida,Toneladas,2025,arábica,-,
+43,Rio Grande do Sul,Quantidade produzida,Toneladas,2025,canephora,-,
+50,Mato Grosso do Sul,Quantidade produzida,Toneladas,2021,arábica,228,228.0
+50,Mato Grosso do Sul,Quantidade produzida,Toneladas,2021,canephora,-,
+50,Mato Grosso do Sul,Quantidade produzida,Toneladas,2022,arábica,64,64.0
+50,Mato Grosso do Sul,Quantidade produzida,Toneladas,2022,canephora,-,
+50,Mato Grosso do Sul,Quantidade produzida,Toneladas,2023,arábica,292,292.0
+50,Mato Grosso do Sul,Quantidade produzida,Toneladas,2023,canephora,-,
+50,Mato Grosso do Sul,Quantidade produzida,Toneladas,2024,arábica,77,77.0
+50,Mato Grosso do Sul,Quantidade produzida,Toneladas,2024,canephora,-,
+50,Mato Grosso do Sul,Quantidade produzida,Toneladas,2025,arábica,99,99.0
+50,Mato Grosso do Sul,Quantidade produzida,Toneladas,2025,canephora,-,
+51,Mato Grosso,Quantidade produzida,Toneladas,2021,arábica,32,32.0
+51,Mato Grosso,Quantidade produzida,Toneladas,2021,canephora,6281,6281.0
+51,Mato Grosso,Quantidade produzida,Toneladas,2022,arábica,32,32.0
+51,Mato Grosso,Quantidade produzida,Toneladas,2022,canephora,9316,9316.0
+51,Mato Grosso,Quantidade produzida,Toneladas,2023,arábica,38,38.0
+51,Mato Grosso,Quantidade produzida,Toneladas,2023,canephora,11509,11509.0
+51,Mato Grosso,Quantidade produzida,Toneladas,2024,arábica,25,25.0
+51,Mato Grosso,Quantidade produzida,Toneladas,2024,canephora,11737,11737.0
+51,Mato Grosso,Quantidade produzida,Toneladas,2025,arábica,35,35.0
+51,Mato Grosso,Quantidade produzida,Toneladas,2025,canephora,10007,10007.0
+52,Goiás,Quantidade produzida,Toneladas,2021,arábica,17018,17018.0
+52,Goiás,Quantidade produzida,Toneladas,2021,canephora,-,
+52,Goiás,Quantidade produzida,Toneladas,2022,arábica,16957,16957.0
+52,Goiás,Quantidade produzida,Toneladas,2022,canephora,-,
+52,Goiás,Quantidade produzida,Toneladas,2023,arábica,14934,14934.0
+52,Goiás,Quantidade produzida,Toneladas,2023,canephora,-,
+52,Goiás,Quantidade produzida,Toneladas,2024,arábica,16538,16538.0
+52,Goiás,Quantidade produzida,Toneladas,2024,canephora,-,
+52,Goiás,Quantidade produzida,Toneladas,2025,arábica,16658,16658.0
+52,Goiás,Quantidade produzida,Toneladas,2025,canephora,-,
+53,Distrito Federal,Quantidade produzida,Toneladas,2021,arábica,933,933.0
+53,Distrito Federal,Quantidade produzida,Toneladas,2021,canephora,-,
+53,Distrito Federal,Quantidade produzida,Toneladas,2022,arábica,1205,1205.0
+53,Distrito Federal,Quantidade produzida,Toneladas,2022,canephora,-,
+53,Distrito Federal,Quantidade produzida,Toneladas,2023,arábica,933,933.0
+53,Distrito Federal,Quantidade produzida,Toneladas,2023,canephora,-,
+53,Distrito Federal,Quantidade produzida,Toneladas,2024,arábica,1098,1098.0
+53,Distrito Federal,Quantidade produzida,Toneladas,2024,canephora,-,
+53,Distrito Federal,Quantidade produzida,Toneladas,2025,arábica,1015,1015.0
+53,Distrito Federal,Quantidade produzida,Toneladas,2025,canephora,-,

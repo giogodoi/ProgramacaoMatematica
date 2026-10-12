@@ -1,0 +1,6 @@
+terminal,nome,tipo,cod_ibge,codigo_recinto,fonte,latitude,longitude,coordenada
+T_JF,Porto Seco de Juiz de Fora (Multiterminais),porto_seco,3136702,6.35.32.01-8,"Receita Federal, PortosSecosFev2023",-21.7595,-43.3398,sede municipal (aproximacao; portao do recinto a georreferenciar)
+T_UBA,Porto Seco do Triangulo (EADI Uberaba),porto_seco,3170107,6.45.32.01-1,"Receita Federal, PortosSecosFev2023",-19.7472,-47.9381,sede municipal (aproximacao; portao do recinto a georreferenciar)
+T_VAG,CLIA Varginha,CLIA,3170701,,"Ata 2a reuniao Colfac-MG, 17/11/2022",-21.5556,-45.4364,sede municipal (aproximacao; portao do recinto a georreferenciar)
+T_PAL,CLIA Pouso Alegre,CLIA,3152501,,"Ata 2a reuniao Colfac-MG, 17/11/2022",-22.2266,-45.9389,sede municipal (aproximacao; portao do recinto a georreferenciar)
+T_BET,CLIA Betim (TORA),CLIA,3106705,,"Ata 2a reuniao Colfac-MG, 17/11/2022",-19.9668,-44.2008,sede municipal (aproximacao; portao do recinto a georreferenciar)

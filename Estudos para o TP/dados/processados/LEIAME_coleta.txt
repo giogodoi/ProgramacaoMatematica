@@ -1,0 +1,7 @@
+Dados extraidos em 2026-10-12 por fase1/coleta_dados.py
+sidra_mun: https://apisidra.ibge.gov.br/values/t/1613/n6/in%20n3%2031/v/214,216,112,215/p/last%20{a}/c82/31619,31620
+sidra_uf: https://apisidra.ibge.gov.br/values/t/1613/n1/all/n3/all/v/214/p/last%20{a}/c82/31619,31620
+localidades: https://servicodados.ibge.gov.br/api/v1/localidades/estados/31/municipios
+coords: https://raw.githubusercontent.com/kelvins/municipios-brasileiros/main/csv/municipios.csv
+anp: https://www.gov.br/anp/pt-br/assuntos/precos-e-defesa-da-concorrencia/precos/precos-revenda-e-de-distribuicao-combustiveis/shlp/semanal/semanal-estados-desde-2013.xlsx
+osrm: https://router.project-osrm.org/table/v1/driving/{coords}?annotations=distance,duration
