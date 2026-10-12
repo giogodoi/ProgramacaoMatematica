@@ -47,7 +47,7 @@ URL = {
 TERMINAIS = [
     dict(terminal="T_JF", nome="Porto Seco de Juiz de Fora (Multiterminais)", tipo="porto_seco",
          cod_ibge=3136702, codigo_recinto="6.35.32.01-8", fonte="Receita Federal, PortosSecosFev2023"),
-    dict(terminal="T_UBA", nome="Porto Seco do Triangulo (EADI Uberaba)", tipo="porto_seco",
+    dict(terminal="T_UBA", nome="Porto Seco do Triângulo (EADI Uberaba)", tipo="porto_seco",
          cod_ibge=3170107, codigo_recinto="6.45.32.01-1", fonte="Receita Federal, PortosSecosFev2023"),
     dict(terminal="T_VAG", nome="CLIA Varginha", tipo="CLIA",
          cod_ibge=3170701, codigo_recinto="", fonte="Ata 2a reuniao Colfac-MG, 17/11/2022"),
