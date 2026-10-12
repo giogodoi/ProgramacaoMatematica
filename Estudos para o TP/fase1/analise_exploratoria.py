@@ -204,6 +204,8 @@ def analisar_producao():
     q1, q3 = rend.quantile([0.25, 0.75])
     out = a[(rend < q1 - 1.5 * (q3 - q1)) | (rend > q3 + 1.5 * (q3 - q1))]
     macro("RendMed", br(rend.median()))
+    macro("RendMin", br(rend.min()))
+    macro("RendMax", br(rend.max()))
     macro("RendOut", str(len(out)))
 
     piv = sul.pivot_table(index="cod_ibge", columns="ano", values="producao_t")
@@ -238,6 +240,8 @@ def analisar_diesel():
     for nome, p in (("baixo (P10)", p10), ("base (P50)", p50), ("alto (P90)", p90)):
         linhas.append({"Cenário": nome, "Diesel S10 (R\\$/L)": br(p, 2),
                        "Custo por km (R\\$/km)": br(C_KM + CONSUMO * p, 2)})
+    macro("CustoKmDif", br(100 * (CONSUMO * (p90 - p10)) / (C_KM + CONSUMO * p10), 1))
+    macro("PctDieselKm", br(100 * CONSUMO * p50 / (C_KM + CONSUMO * p50)))
     tabela_tex("diesel_cenarios", pd.DataFrame(linhas), "lrr",
                "Cenários de preço do diesel S10 em MG (últimas 104 semanas) e custo por quilômetro.",
                "tab:diesel",
@@ -248,9 +252,9 @@ def analisar_diesel():
     ax.plot(s10.index, s10.values, color=AZUL, lw=1.4, label="diesel S10 (média semanal MG)")
     ax.plot(s500.index, s500.values, color=LARANJA, lw=1.0, alpha=0.9, label="diesel S500")
     ax.fill_between([j.index.min(), fim], p10, p90, color=AZUL, alpha=0.12, lw=0,
-                    label="faixa P10--P90 do S10 (últimas 104 semanas)".replace("--", "–"))
+                    label="P10–P90 do S10 (104 semanas)")
     ax.set_ylabel("R$/L (nominal)")
-    ax.legend(loc="lower right")
+    ax.legend(loc="upper left")
     salvar(fig, "diesel")
 
 
@@ -280,7 +284,8 @@ def analisar_distancias():
     term = [c for c in ids if c.startswith("T_")]
     linhas = []
     for tt in term:
-        nome = N.set_index("no").loc[tt, "nome"]
+        nome = {"T_JF": "Juiz de Fora (porto seco)", "T_UBA": "Uberaba (porto seco)", "T_VAG": "Varginha (CLIA)",
+                "T_PAL": "Pouso Alegre (CLIA)", "T_BET": "Betim (CLIA)"}.get(tt, N.set_index("no").loc[tt, "nome"])
         linhas.append({"Terminal": nome,
                        "Dist. média (km)": br(d.loc[col, tt].mean()),
                        "Dist. mín.--máx. (km)": f"{br(d.loc[col, tt].min())}--{br(d.loc[col, tt].max())}",
@@ -324,6 +329,9 @@ def tamanho_instancia(sul_ano):
                     ("todos os produtores", int(MACROS["NMunSul"]))):
         nbin = n + n * (n - 1) + n * m
         ncons = 2 * n + m + 1 + 2 * n * (n - 1) + n * m
+        if n == int(MACROS["NSulOitenta"]):
+            macro("BinOitenta", br(nbin))
+            macro("RazaoBin", br(nbin / (8 + 8 * 7 + 8 * m)))
         linhas.append({"Escopo": nome, "$n$": n, "$m$": m, "Binárias": br(nbin), "Contínuas": br(2 * n),
                        "Restrições (aprox.)": br(ncons)})
     tabela_tex("tamanho", pd.DataFrame(linhas), "lrrrrr",

@@ -2,3 +2,8 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 Estudos para o TP/dados/brutos/
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
