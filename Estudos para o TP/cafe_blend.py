@@ -113,7 +113,7 @@ def make_blend_instance(n_types=3, silos_per_type=1, n_mix=1, n_ports=2, n_lots=
 
 
 def make_semireal_instance(n_types=3, silos_per_type=2, mixers=("Três Pontas", "Alfenas"), n_lots=1, tw=False,
-                           seed=1, dados=None, Q=30.0, W=19.2, blends=None, rho=0.0, c_km=2.8, diesel=None,
+                           seed=1, dados=None, silos=None, Q=30.0, W=19.2, blends=None, rho=0.0, c_km=2.8, diesel=None,
                            cons=0.40, f_veh=350.0, F_mix=(180.0, 150.0), s_mix=(1.5, 1.5),
                            F_port=None, tau=None, s_port=None, s_silo=0.5, price=(15.0, 40.0), Tmax=16.0,
                            beta=200.0, stock_slack=1.2):
@@ -122,6 +122,9 @@ def make_semireal_instance(n_types=3, silos_per_type=2, mixers=("Três Pontas", 
     Reais: garagem (Varginha), municipios produtores, 5 recintos alfandegados de MG, distancias e
     tempos OSRM, diesel P50 ANP-MG. Sinteticos: quais municipios tem silo de cada tipo, estoques,
     tarifas, misturadoras (em municipios-polo), janelas.
+
+    ``silos``: nomes de municipios (agrupados por tipo, ``silos_per_type`` por tipo) para fixar os silos;
+    sem ele, os silos sao sorteados entre os 30 maiores produtores.
     """
     import pandas as pd
     dados = dados or os.path.join(os.path.dirname(os.path.abspath(__file__)), "dados", "processados")
@@ -134,8 +137,13 @@ def make_semireal_instance(n_types=3, silos_per_type=2, mixers=("Três Pontas", 
     rng = random.Random(seed)
     col = nos[nos["tipo"] == "coleta"]
     mix_ids = [col[col["nome"] == m]["no"].iloc[0] for m in mixers]
-    candidatos = [c for c in col["no"] if c not in mix_ids]
-    silo_ids = rng.sample(candidatos, n_types * silos_per_type)
+    if silos:
+        if len(silos) != n_types * silos_per_type:
+            raise ValueError("silos deve ter n_types * silos_per_type nomes")
+        silo_ids = [col[col["nome"] == s]["no"].iloc[0] for s in silos]
+    else:
+        candidatos = [c for c in col["no"] if c not in mix_ids]
+        silo_ids = rng.sample(candidatos, n_types * silos_per_type)
     port_ids = list(nos[nos["no"].str.startswith("T_")]["no"])
     ids = ["G"] + silo_ids + mix_ids + port_ids
     G = 0
