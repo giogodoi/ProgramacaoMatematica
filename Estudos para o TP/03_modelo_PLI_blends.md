@@ -222,7 +222,8 @@ Silos que ficam sem retirada são removidos da rota automaticamente. Violações
 1. **Força bruta (`brute_force`):** no B1 e no B3 com um silo por tipo, enumera ordens × misturadoras × portos. O PLI deve dar o mesmo custo. Isso está no autoteste de `cafe_blend.py`.
 2. **Avaliador independente (`evaluate`):** recalcula o custo e confere estrutura, composição, estoque, capacidade, janelas e \(T_{max}\) de qualquer solução, exata ou heurística. O custo recalculado deve bater com o objetivo do solver.
 3. **Heurística × exato:** a heurística nunca pode ficar abaixo de um ótimo provado. O autoteste de `cafe_blend_heur.py` confere isso nos níveis B1 a B5.
-4. **Escalabilidade:** o notebook `blends_nivel1.ipynb` aumenta tipos, silos e lotes e registra variáveis, restrições, tempo e gap em `escalabilidade_blends.csv`.
+4. **Instâncias reduzidas:** o notebook `blends_nivel1.ipynb` resolve as instâncias semi-reais R1 a R5 (níveis B1 a B5) sobre a rede da Fase 1. Elas usam seis silos em municípios próximos de Varginha, as misturadoras de Três Pontas e Alfenas e os cinco recintos de MG, e comparam exato e heurística.
+5. **Escalabilidade (próxima iteração):** aumentar tipos, silos e lotes e registrar variáveis, restrições, tempo e gap. `escalabilidade_blends.csv` traz uma primeira rodada, com instâncias sintéticas de 22 a 1.005 binárias.
 
 ## 11. Relação com o Nível 1
 
