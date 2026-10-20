@@ -1,0 +1,199 @@
+\chapter{Bloco 1 -- Implicações \emph{se--então}}
+\label{cap:bloco1}
+
+A ferramenta deste bloco é a \textbf{restrição de ativação}:
+\[
+x>0 \;\Rightarrow\; y=1 \qquad\Longleftrightarrow\qquad x\le M\,y \qquad (M\ge\text{maior valor possível de }x).
+\]
+Ela é o Teorema~\ref{teo:binarias} com $f(x)=x$: ``se $y=0$ então $x\le0$''.
+
+\section{1A -- Custo fixo: fabricar exige pagar a preparação}
+
+\paragraph{O problema.} Uma fábrica produz Carrinho (A), Boneca (B) e Quebra-cabeça (C). Cada produto exige um
+\textbf{molde}, cujo custo fixo é pago uma única vez \emph{se} o produto for fabricado, e zero se não for. Queremos
+maximizar o lucro líquido.
+
+\begin{center}
+\begin{tabular}{lccc|c}
+\toprule
+& Carrinho (A) & Boneca (B) & Quebra-cabeça (C) & disponível\\
+\midrule
+lucro por unidade $p_i$ (R\$) & 20 & 15 & 10 &\\
+horas de máquina $h_i$ & 3 & 1 & 2 & $H=200$\\
+plástico $q_i$ (kg) & 1 & 1 & 2 & $P=150$\\
+custo fixo do molde $s_i$ (R\$) & 100 & 400 & 100 &\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{discussao}
+\begin{enumerate}
+  \item \emph{Quais são as variáveis? Só $x_i$ basta?} Não. O custo fixo é ``tudo ou nada'': vale $s_i$ para
+  qualquer $x_i>0$ e $0$ para $x_i=0$, o que não é linear em $x_i$ (Seção~\ref{sec:bigM}). Precisamos de
+  $x_i\in\Z_+$ (unidades) e $y_i\in\B$ (comprar ou não o molde $i$).
+  \item \emph{Como expressar ``se $x_i>0$ então $y_i=1$''?} Com $x_i\le M_iy_i$.
+  \item \emph{O que impede $y_i=0$ com $x_i>0$?} A própria restrição: $y_i=0$ força $x_i\le0$. \emph{E nada impede
+  $y_i=1$ com $x_i=0$, por que não é problema?} Porque $y_i=1$ custa $s_i>0$ no objetivo. Pagar um molde sem
+  produzir só diminui o lucro, então o solver, maximizando, nunca escolhe isso.
+  \item \emph{Que valor dar a $M_i$?} O maior $x_i$ que os recursos permitem (detalhes abaixo).
+\end{enumerate}
+\end{discussao}
+
+\subsection*{Construindo o modelo, passo a passo}
+
+\textbf{Passo 1 -- variáveis.} $x_i\in\Z_+$ = unidades do produto $i$; \ $y_i\in\B$ = 1 se o molde de $i$ é
+comprado.
+
+\textbf{Passo 2 -- objetivo.} Lucro das unidades menos custos fixos \emph{pagos}:
+\[
+\max\;\sum_i \big(p_i x_i - s_i y_i\big) = 20x_A+15x_B+10x_C-100y_A-400y_B-100y_C.
+\]
+
+\textbf{Passo 3 -- recursos.}
+\[
+3x_A + x_B + 2x_C \le 200\quad\text{(horas)},\qquad x_A+x_B+2x_C\le150\quad\text{(plástico)}.
+\]
+
+\textbf{Passo 4 -- ativação.} $x_i\le M_iy_i$ para $i=A,B,C$.
+
+\textbf{Passo 5 -- escolher $M_i$.} Mesmo usando \emph{todo} o recurso só com o produto $i$, não dá para produzir mais
+que $H/h_i$ (horas) nem mais que $P/q_i$ (plástico). Logo $M_i=\min\{H/h_i,\;P/q_i\}$:
+\begin{center}
+\begin{tabular}{lccc}
+\toprule
+& $H/h_i$ & $P/q_i$ & $M_i$\\
+\midrule
+A & $200/3\approx66{,}7$ & $150$ & $66{,}7$\\
+B & $200$ & $150$ & $150$\\
+C & $100$ & $75$ & $75$\\
+\bottomrule
+\end{tabular}
+\end{center}
+\emph{Refinamento opcional:} como $x_i$ é inteiro, poderíamos usar $\lfloor 66{,}7\rfloor=66$ para A, um
+$M$ ainda mais apertado.
+
+\subsection*{O código}
+
+O esqueleto já cria variáveis e restrições de recursos. Faltam o objetivo (TODO 1) e a ativação dentro do laço
+(TODO 2), em que \py{Mi} já está calculado.
+
+\begin{codigo}
+def modelo_fabrica(M=None, com_regra=False):
+    n = len(lucro)
+    prob = pulp.LpProblem("fabrica", pulp.LpMaximize)
+    x = [pulp.LpVariable(f"x_{i}", lowBound=0, cat="Integer") for i in range(n)]
+    y = [pulp.LpVariable(f"y_{i}", cat="Binary") for i in range(n)]
+
+    prob += pulp.lpSum(horas[i]*x[i]    for i in range(n)) <= H, "horas"
+    prob += pulp.lpSum(plastico[i]*x[i] for i in range(n)) <= P, "plastico"
+
+    # TODO 1: lucro das unidades - custo fixo dos moldes comprados
+    prob += pulp.lpSum(lucro[i]*x[i] - custo_fixo[i]*y[i] for i in range(n)), "lucro_liquido"
+
+    # TODO 2: ativação x_i <= M_i * y_i
+    for i in range(n):
+        Mi = M if M is not None else min(H/horas[i], P/plastico[i])
+        prob += x[i] <= Mi*y[i], f"ativa_{i}"
+
+    if com_regra:                      # exercício 1B (próxima seção)
+        prob += x[2] >= 20*y[1], "regra_B_implica_C"
+    return prob, x, y
+\end{codigo}
+
+O parâmetro \py{M} existe para o experimento seguinte: com \py{M=None} usamos o $M_i$ apertado de cada produto; com
+um número, o mesmo $M$ para todos.
+
+\subsection*{Resultado e interpretação}
+
+O ótimo é \textbf{1875}, com $x=(25,125,0)$ e $y=(1,1,0)$: produz 25 carrinhos e 125 bonecas e \textbf{não} produz
+quebra-cabeças. Conferindo: horas $3\cdot25+125=200$ e plástico $25+125=150$, os dois recursos esgotados. Lucro
+$500+1875-100-400=1875$.
+
+\emph{Por que o quebra-cabeça fica de fora?} Ele usa 2 kg de plástico por R\$ 10 de lucro (R\$ 5/kg), enquanto a boneca
+dá R\$ 15/kg. Com o plástico como gargalo, não compensa pagar R\$ 100 de molde para produzir C. Fixando cada
+combinação de moldes e otimizando a produção, obtemos:
+\begin{center}
+\begin{tabular}{ccc|c|ccc}
+\toprule
+$y_A$ & $y_B$ & $y_C$ & lucro ótimo & $x_A$ & $x_B$ & $x_C$\\
+\midrule
+1 & 1 & 0 & \textbf{1875} & 25 & 125 & 0\\
+0 & 1 & 0 & 1850 & 0 & 150 & 0\\
+1 & 1 & 1 & 1775 & 25 & 125 & 0\\
+0 & 1 & 1 & 1750 & 0 & 150 & 0\\
+1 & 0 & 0 & 1220 & 66 & 0 & 0\\
+1 & 0 & 1 & 1130 & 66 & 0 & 1\\
+0 & 0 & 1 & 650 & 0 & 0 & 75\\
+\bottomrule
+\end{tabular}
+\end{center}
+Repare nas linhas com $y_C=1$ e $x_C=0$: o modelo \emph{permite} comprar o molde sem usar, mas isso só tira R\$ 100
+do lucro. Por isso o solver nunca escolhe essa opção.
+
+\begin{atencao}[e a restrição $y_i\le x_i$?]
+Em sala apareceu também a restrição $y_A\le x_A$ (``se não produz, não compra o molde''). Ela é válida, porque
+$x_A$ é inteiro e $y_A=1$ exige $x_A\ge1$, mas aqui é \textbf{desnecessária}: o custo fixo no objetivo já empurra
+$y_i$ para 0 quando $x_i=0$. Ela só seria necessária se $y_i=1$ fosse ``vantajoso'' (por exemplo, um bônus por
+abrir) ou se outra restrição dependesse de $y_i$.
+\end{atencao}
+
+\section{Experimento: o valor de $M$ importa?}
+
+Todo $M$ \textbf{válido} dá o mesmo ótimo inteiro (1875), mas a \textbf{relaxação linear} muda muito:
+\begin{center}
+\begin{tabular}{rcc}
+\toprule
+$M$ & relaxação linear & gap até o ótimo inteiro\\
+\midrule
+$10^6$ & 2374,95 & 499,95\\
+1000 & 2322,50 & 447,50\\
+200 & 2112,50 & 237,50\\
+apertado ($M_i$) & 2004,17 & 129,17\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Por que isso acontece?} Na relaxação, $y_i$ pode ser fracionário. Para pagar o mínimo de custo fixo, o
+solver escolhe o menor $y_i$ permitido: $y_i=x_i/M_i$. Com $M$ apertado, a relaxação produz $x=(25,125,0)$ com
+$y_A=25/66{,}7=0{,}375$ e $y_B=125/150\approx0{,}833$; o custo fixo pago é
+$100\cdot0{,}375+400\cdot0{,}833\approx371$, e o valor fica $2375-371\approx2004$. Com $M=10^6$, $y_B$ fica em
+$0{,}000125$: o custo fixo praticamente some e a relaxação vira o problema \emph{sem} custo fixo (lucro 2375).
+Quanto maior o $M$, pior o limite e mais trabalho para o \emph{branch-and-bound}. Além disso, $M$ enorme gera
+problemas numéricos (Seção~\ref{sec:escolherM}).
+
+\section{1B -- Produção condicionada}
+
+\paragraph{A regra.} \emph{Se a fábrica produzir Boneca (B), é obrigada a produzir Quebra-cabeça (C) em lote de pelo
+menos 20 unidades.}
+
+\begin{discussao}
+\begin{itemize}
+  \item \emph{Como forçar $x_C\ge20$ apenas quando $y_B=1$?} Com $x_C\ge 20\,y_B$. Se $y_B=1$: $x_C\ge20$. Se $y_B=0$:
+  $x_C\ge0$, que já valia.
+  \item \emph{Qual a contrapositiva? Precisa de outra restrição?} A contrapositiva é ``se $x_C<20$, então não
+  produz B''. Ela já está garantida: se $x_C<20$, a restrição força $y_B=0$, e a ativação $x_B\le M_By_B$ força
+  $x_B=0$. Uma única restrição basta.
+  \item \emph{A regra muda o ótimo?} Sim, porque o ótimo de 1A tinha $x_B=125$ e $x_C=0$, que agora é proibido.
+\end{itemize}
+\end{discussao}
+
+\paragraph{Código.} Dentro de \py{if com_regra:} (já mostrado acima):
+\begin{codigo}
+    if com_regra:
+        prob += x[2] >= 20*y[1], "regra_B_implica_C"     # x_C >= 20 * y_B
+\end{codigo}
+Lembre-se dos índices: \py{0}=Carrinho, \py{1}=Boneca, \py{2}=Quebra-cabeça.
+
+\paragraph{Resultado.} Ótimo \textbf{1375} com $x=(25,85,20)$ e $y=(1,1,1)$. Agora é preciso comprar o molde de C
+(R\$ 100), e cada quebra-cabeça usa recursos que iriam para bonecas: horas $75+85+40=200$, plástico $25+85+40=150$.
+Lucro: $500+1275+200-600=1375$.
+
+\begin{atencao}[erros típicos do Bloco 1]
+\begin{itemize}
+  \item Esquecer $-s_iy_i$ no objetivo: o modelo ``esquece'' o custo fixo e devolve 2375.
+  \item Usar $M$ pequeno demais (por exemplo, $M=50$ para todos): corta soluções válidas e o ótimo cai.
+  \item Escrever $x_C\ge20$ sem multiplicar por $y_B$: força produzir C \emph{sempre}, e não apenas quando há
+  boneca.
+  \item Trocar índices (\py{y[2]} no lugar de \py{y[1]}): a regra passa a ser ``se C então C''.
+\end{itemize}
+\end{atencao}
