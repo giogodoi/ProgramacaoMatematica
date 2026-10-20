@@ -1,0 +1,68 @@
+\chapter{Quadro-resumo: as receitas de linearização}
+\label{cap:resumo}
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{4.6cm}l>{\raggedright\arraybackslash}X}
+\toprule
+Quero dizer\ldots & Variáveis & Restrição(ões) linear(es)\\
+\midrule
+$x>0\Rightarrow y=1$ (custo fixo, ativação) & $y\in\B$ & $x\le My$\\
+$y=1\Rightarrow f(x)\le0$ & $y$ & $f(x)\le M(1-y)$\\
+$y=1\Rightarrow x\ge m$ (lote mínimo) & $y$ & $x\ge m\,y$\\
+$x\in\{0\}\cup[\ell,u]$ (semicontínua) & $y$ & $\ell y\le x\le uy$\\
+$f(x)\le0$ \textbf{ou} $g(x)\le0$ & $y$ & $f\le M_1(1-y)$ \ e \ $g\le M_2\,y$\\
+tarefas $j,k$ não se sobrepõem & $y_{jk}$ & $s_j+p_j\le s_k+M(1-y_{jk})$ \ e \ $s_k+p_k\le s_j+My_{jk}$\\
+$P_1\Rightarrow P_2$ & $\delta_i$ & $\delta_1\le\delta_2$\\
+$P_1\wedge P_2\Rightarrow P_3$ & $\delta_i$ & $\delta_1+\delta_2-\delta_3\le1$\\
+$P_1\wedge\dots\wedge P_k\Rightarrow P_{k+1}\vee\dots\vee P_n$ & $\delta_i$ & $\sum_{i\le k}\delta_i-\sum_{i>k}\delta_i\le k-1$\\
+no máximo / exatamente / pelo menos $k$ de $n$ & $\delta_i$ & $\sum\delta_i\le k$ \ / \ $=k$ \ / \ $\ge k$\\
+$x\in\{v_1,\dots,v_k\}$ & $y_i$ & $x=\sum v_iy_i$, \ $\sum y_i=1$ \ (e $\phi(x)=\sum\phi(v_i)y_i$)\\
+$\delta\leftrightarrow f(x)\le0$ & $\delta$ & $f\le M(1-\delta)$ \ e \ $\varepsilon-f-(\varepsilon-m)\delta\le0$\\
+$P_1\xor P_2$ (com $\delta_i\leftrightarrow$ restrições) & $\delta_1,\delta_2$ & indicadores de cada uma \textbf{+} $\delta_1+\delta_2=1$\\
+$\delta_3=\delta_1\delta_2$ & $\delta_3$ & $\delta_3\le\delta_1$, $\delta_3\le\delta_2$ (ou $-\delta_1-\delta_2+2\delta_3\le0$), $\delta_1+\delta_2-\delta_3\le1$\\
+$\delta_3=\delta_1\vee\delta_2$ & $\delta_3$ & $\delta_3\ge\delta_1$, \ $\delta_3\ge\delta_2$, \ $\delta_3\le\delta_1+\delta_2$\\
+$u=x\,\delta$ ($0\le x\le U$) & $u\ge0$ & $u\le U\delta$, \ $u\le x$, \ $u\ge x-U(1-\delta)$\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section*{Boas práticas (que voltam em \emph{branch-and-bound} e planos de corte)}
+\begin{enumerate}
+  \item \textbf{$M$ o menor possível.} Calcule-o com os limites das variáveis ou com uma pequena PL. $M$ grande
+  enfraquece a relaxação e gera instabilidade numérica; $M$ pequeno demais deixa o modelo errado.
+  \item \textbf{Formulações mais fortes} (desagregadas) podem valer mais que formulações ``enxutas''.
+  \item \textbf{Simetria atrapalha.} Quebre-a com restrições de ordenação ($y_i\ge y_{i+1}$).
+  \item \textbf{Modelo certo $\neq$ modelo bom.} Compare as \textbf{relaxações lineares} das alternativas.
+  \item \textbf{Teste os casos.} Para cada restrição com binária, substitua $0$ e $1$ e leia o que sobra. Se
+  alguma leitura não fizer sentido, a restrição está errada.
+\end{enumerate}
+
+\section*{Checklist antes de rodar o solver}
+\begin{itemize}
+  \item[$\square$] Cada variável tem o tipo certo (\py{Continuous}, \py{Integer}, \py{Binary}) e \py{lowBound=0} quando
+  não pode ser negativa?
+  \item[$\square$] O objetivo inclui \emph{todos} os custos/lucros, inclusive os fixos ($s_iy_i$)?
+  \item[$\square$] Toda binária está ``amarrada'' a algo? (Uma binária que não aparece em nenhuma restrição o solver
+  escolhe livremente.)
+  \item[$\square$] Usei $=1$ onde o enunciado diz ``exatamente um'' e $\ge1$ onde diz ``pelo menos um''?
+  \item[$\square$] Nenhum \py{<}, \py{>}, \py{!=} nem produto de variáveis?
+  \item[$\square$] Os nomes das restrições são únicos (índice na f-string)?
+  \item[$\square$] O resultado faz sentido? Confira a solução contra o enunciado, restrição por restrição.
+\end{itemize}
+
+\section*{Ponte para a lista de prática}
+Os exercícios da lista (\emph{Pratica\_Exerc\_\_Programacao\_Inteira}) usam as técnicas deste notebook com problemas
+diferentes:
+\begin{center}
+\begin{tabularx}{\linewidth}{lX}
+\toprule
+Exercício & Técnica(s)\\
+\midrule
+1 -- Artesão & Bloco 1: lote mínimo \emph{se} produzir; custo fixo\\
+2 -- Máquinas paralelas & Blocos 6--7: alocação de tarefas a máquinas com objetivo \emph{min-max}\\
+3 -- Tabuleiro $4\times4$ & lógica + variável inteira auxiliar (paridade: $\sum=2k$)\\
+4 -- \emph{Flowshop} permutacional & Bloco 2: disjuntivas de ordenação (\emph{big-M})\\
+\bottomrule
+\end{tabularx}
+\end{center}
