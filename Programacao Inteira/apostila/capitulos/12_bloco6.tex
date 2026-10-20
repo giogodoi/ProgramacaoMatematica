@@ -1,0 +1,152 @@
+\chapter{Bloco 6 -- Problema da mochila binária}
+\label{cap:bloco6}
+
+Temos itens $j$ com \textbf{valor} $c_j$ e \textbf{peso} $a_j$, e uma mochila de capacidade $b$. Queremos o conjunto
+de maior valor total que cabe. A mochila é um dos problemas clássicos mais importantes: aparece sozinha (orçamento
+de projetos, carga de contêineres) e como \emph{subproblema} de modelos maiores.
+
+\section{Quatro versões do problema}
+
+\begin{center}
+\begin{tabular}{ccccl}
+\toprule
+Caso & Fracionável? & Limite por item & Tipo & Solução\\
+\midrule
+1 & sim & ilimitado & PL & trivial: só o item de maior $c_j/a_j$, $x_{j^*}=b/a_{j^*}$\\
+2 & não & ilimitado & PI & \textbf{não trivial}\\
+3 & sim & $\le1$ & PL & gulosa por $c_j/a_j$, fracionando o último item\\
+\textbf{4} & \textbf{não} & $\le\mathbf{1}$ & \textbf{PB} & \textbf{não trivial} $\leftarrow$ \emph{este bloco}\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{exemplo}[caso 3 nos slides: a gulosa fracionária]
+$\max 6x_1+8x_2+4x_3+x_4$ s.a.\ $x_1+2x_2+2x_3+x_4\le4$, $0\le x_j\le1$. Razões: $6$, $4$, $2$, $1$.
+Pegamos $x_1=1$ (sobram 3), $x_2=1$ (sobra 1) e $x_3=1/2$ (acabou); $x_4=0$. Valor $6+8+2=16$.
+\end{exemplo}
+
+O caso 3 é exatamente a \textbf{relaxação linear} do caso 4. Então a gulosa fracionária dá, sem simplex nenhum, o
+limite superior da mochila binária.
+
+\begin{outros}[Dantzig (1957) e o ``item crítico'']
+Esse resultado é clássico: Dantzig mostrou em 1957 que a relaxação contínua da mochila é resolvida ordenando os itens
+por $c_j/a_j$ e enchendo a mochila até o primeiro item que não cabe inteiro, o \textbf{item crítico}, que entra
+fracionado~\cite{dantzig1957,martellototh1990}. O valor resultante (o ``limite de Dantzig'') é o limite superior
+usado nos primeiros algoritmos de \emph{branch-and-bound} para a mochila.
+\end{outros}
+
+\section{O problema do notebook: carteira de projetos}
+
+Dez projetos, orçamento $B=74$ (R\$ mil):
+\begin{center}
+\small
+\begin{tabular}{l*{10}{c}}
+\toprule
+projeto $j$ & 1&2&3&4&5&6&7&8&9&10\\
+\midrule
+valor $c_j$ & 29&47&14&33&37&13&41&36&38&16\\
+custo $a_j$ & 34&25&19&32&18&12&16&36&16&16\\
+$c_j/a_j$ & 0,85&1,88&0,74&1,03&2,06&1,08&\textbf{2,56}&1,00&2,38&1,00\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{discussao}
+\begin{enumerate}
+  \item \emph{Variável? Por que binária e não inteira qualquer?} $x_j=1$ se o projeto $j$ é financiado. Um projeto
+  não pode ser financiado ``duas vezes'' nem pela metade: é o caso 4.
+  \item \emph{Objetivo e restrição?} $\max\sum_jc_jx_j$ s.a.\ $\sum_ja_jx_j\le74$. Uma única restrição!
+  \item \emph{Qual entra primeiro pela razão? A gulosa resolve? E a relaxação, é o caso 3?} O projeto 7 (razão 2,56)
+  entra primeiro. A gulosa \emph{não} garante o ótimo. A relaxação é o caso 3.
+\end{enumerate}
+\end{discussao}
+
+\subsection*{Exercício 6A}
+\begin{codigo}
+def modelo_mochila(valor, peso, B, extras=False):
+    prob = pulp.LpProblem("mochila", pulp.LpMaximize)
+    x = {j: pulp.LpVariable(f"x_{j}", cat="Binary") for j in valor}
+    prob += pulp.lpSum(valor[j]*x[j] for j in valor), "valor_total"       # TODO 1
+    prob += pulp.lpSum(peso[j]*x[j] for j in valor) <= B, "capacidade"    # TODO 2
+    if extras:
+        ...                                                               # 6B, abaixo
+    return prob, x
+\end{codigo}
+\py{valor} e \py{peso} são dicionários com chaves $1,\dots,10$ (\py{enumerate(..., start=1)}), então
+\py{for j in valor} percorre os projetos.
+
+\section{Comparando quatro respostas}
+
+\paragraph{Gulosa (heurística).} Ordem por razão: 7, 9, 5, 2, 6, 4, 8, 10, 1, 3.
+\begin{center}
+\begin{tabular}{clccl}
+\toprule
+passo & projeto & custo acumulado & valor & decisão\\
+\midrule
+1 & 7 & 16 & 41 & entra\\
+2 & 9 & 32 & 79 & entra\\
+3 & 5 & 50 & 116 & entra\\
+4 & 2 & 75 & -- & não cabe ($75>74$)\\
+5 & 6 & 62 & 129 & entra\\
+6+ & 4, 8, 10, 1, 3 & -- & -- & nenhum cabe nos 12 restantes\\
+\bottomrule
+\end{tabular}
+\end{center}
+Resultado: $\{5,6,7,9\}$, valor \textbf{129}.
+
+\paragraph{Relaxação linear (Dantzig).} Mesma ordem, mas o projeto 2 entra \emph{fracionado} para usar os 24 que
+sobram: $x_2=24/25=0{,}96$. Valor $116+0{,}96\cdot47=\mathbf{161{,}12}$. O projeto 2 é o item crítico.
+
+\paragraph{Ótimo (PuLP/CBC) e programação dinâmica.} $\{2,7,9,10\}$, custo $25+16+16+16=73$, valor
+$47+41+38+16=\mathbf{142}$. A programação dinâmica $O(nB)$ do notebook confirma (você verá PD mais adiante na
+disciplina).
+
+\begin{center}
+\begin{tikzpicture}[x=0.075cm]
+  \draw[->] (120,0) -- (168,0);
+  \foreach \v in {120,130,140,150,160} \draw (\v,0.1) -- (\v,-0.1) node[below,font=\footnotesize] {\v};
+  \fill[laranja] (129,0) circle (3pt) node[above=3pt,font=\small,align=center] {gulosa\\129};
+  \fill[verde] (142,0) circle (3pt) node[above=3pt,font=\small,align=center] {ótimo\\142};
+  \fill[azul] (161.12,0) circle (3pt) node[above=3pt,font=\small,align=center] {relaxação\\161,12};
+  \draw[decorate,decoration={brace,mirror,amplitude=5pt}] (129,-0.6) -- (161.12,-0.6)
+    node[midway,below=6pt,font=\small] {intervalo que o \emph{branch-and-bound} precisa fechar};
+\end{tikzpicture}
+\end{center}
+
+\section{6B -- Mochila com regras de negócio}
+
+Juntando os blocos 1 a 3:
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Regra & Lógica & Restrição\\
+\midrule
+(a) projetos 2 e 7 incompatíveis & exclusão mútua & $x_2+x_7\le1$\\
+(b) se 9 então 5 & implicação & $x_9\le x_5$\\
+(c) no máximo 4 projetos & cardinalidade & $\sum_jx_j\le4$\\
+(d) 3 ou 6 (ou ambos) & ou inclusivo & $x_3+x_6\ge1$\\
+\bottomrule
+\end{tabular}
+\end{center}
+\begin{codigo}
+    if extras:
+        prob += x[2] + x[7] <= 1, "excl_2_7"          # (a)
+        prob += x[9] <= x[5], "c9_implica_5"           # (b)
+        prob += pulp.lpSum(x.values()) <= 4, "max4"   # (c)
+        prob += x[3] + x[6] >= 1, "c3_ou_6"            # (d)
+\end{codigo}
+\paragraph{Resultado.} Ótimo \textbf{135} com $\{2,5,6,9\}$ (custo $25+18+12+16=71$). A regra (a) corta a solução de
+6A (que tinha 2 e 7 juntos); (b) obriga o 5 a acompanhar o 9; (d) é satisfeita pelo 6.
+
+\begin{atencao}[erros típicos]
+\begin{itemize}
+  \item Escrever (b) como $x_5\le x_9$: isso é ``se 5 então 9'', a implicação ao contrário.
+  \item Escrever (d) como $x_3+x_6=1$: isso é o ``ou exclusivo'' e proíbe escolher os dois.
+\end{itemize}
+\end{atencao}
+
+\begin{resumo}[Reflexão do notebook]
+A gulosa fica em 129, a relaxação diz ``até 161'' e o ótimo é 142. Quem fecha a diferença é o
+\emph{branch-and-bound}, que usa a relaxação como limite e ramifica nas variáveis fracionárias (aqui, primeiro em
+$x_2$).
+\end{resumo}
