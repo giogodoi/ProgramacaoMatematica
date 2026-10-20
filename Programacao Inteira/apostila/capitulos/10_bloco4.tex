@@ -1,0 +1,131 @@
+\chapter{Bloco 4 -- Representação de valores discretos}
+\label{cap:bloco4}
+
+\begin{receita}[variável que só assume valores de uma lista]
+Se $x$ só pode valer $v_1,\dots,v_k$ (por exemplo, $\{4,6,8,12,20,24\}$), use uma binária por valor:
+\[
+x=\sum_{i=1}^{k} v_i\,y_i,\qquad \sum_{i=1}^{k} y_i = 1,\qquad y_i\in\B.
+\]
+A segunda restrição escolhe \textbf{exatamente um} valor, e a primeira ``lê'' qual foi escolhido.
+
+\textbf{Bônus:} qualquer função de $x$ também fica linear nos $y_i$:
+\[
+\phi(x)=\sum_{i=1}^{k}\phi(v_i)\,y_i,
+\]
+\textbf{mesmo que $\phi$ seja não linear}, porque $\phi(v_i)$ é só uma constante para cada $i$.
+\end{receita}
+
+\section{O problema: diâmetros de tubulação}
+
+Três trechos de tubulação, com comprimentos $L_j$, precisam transportar uma vazão mínima $q_j$. Cada trecho usa
+\textbf{um} diâmetro comercial. A vazão máxima de um tubo de diâmetro $d$ é $0{,}5\,d^2$ L/s (\textbf{não linear} em
+$d$). O estoque de cada diâmetro é limitado. Queremos minimizar o custo total.
+
+\begin{center}
+\begin{tabular}{lcccccc}
+\toprule
+diâmetro $d$ (cm) & 4 & 6 & 8 & 12 & 20 & 24\\
+\midrule
+preço (R\$/m) & 8 & 12 & 18 & 30 & 70 & 100\\
+vazão máx.\ $0{,}5d^2$ (L/s) & 8 & 18 & 32 & 72 & 200 & 288\\
+estoque (m) & 500 & 500 & 500 & 150 & 250 & 300\\
+\bottomrule
+\end{tabular}
+\qquad
+\begin{tabular}{lccc}
+\toprule
+trecho $j$ & 1 & 2 & 3\\
+\midrule
+$L_j$ (m) & 300 & 200 & 250\\
+$q_j$ (L/s) & 15 & 60 & 150\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{discussao}
+\begin{enumerate}
+  \item \emph{Por que não uma variável inteira $d_j$ com $4\le d_j\le24$?} Porque 5, 7, 9, \ldots{} não existem
+  comercialmente, e preço e vazão não são funções lineares de $d$.
+  \item \emph{A vazão cresce com $d^2$; como o modelo continua linear?} Os coeficientes $0{,}5v_i^2$ são
+  \textbf{constantes} (8, 18, 32, \ldots). O que varia são as binárias $y_{jd}$.
+  \item \emph{Qual restrição acopla os trechos?} O \textbf{estoque}. Sem ele, cada trecho escolheria sozinho o
+  diâmetro mais barato que dá vazão: $(6,12,20)$, custo 27\,100.
+\end{enumerate}
+\end{discussao}
+
+\section{Construindo o modelo}
+
+\textbf{Variáveis.} $y_{jd}\in\B$ = 1 se o trecho $j$ usa o diâmetro $d$ (3 trechos $\times$ 6 diâmetros = 18
+binárias).
+
+\textbf{Objetivo.} O custo de usar $d$ no trecho $j$ é $L_j\cdot\text{preço}_d$ (constante!):
+\[
+\min\sum_{j}\sum_{d} L_j\,\text{preço}_d\;y_{jd}.
+\]
+
+\textbf{Restrições.}
+\[
+\begin{aligned}
+&\textstyle\sum_d y_{jd}=1 &&\forall j &&\text{(um diâmetro por trecho)}\\
+&\textstyle\sum_d 0{,}5d^2\,y_{jd}\ge q_j &&\forall j &&\text{(vazão: linear nos }y\text{)}\\
+&\textstyle\sum_j L_j\,y_{jd}\le \text{estoque}_d &&\forall d &&\text{(metros usados de cada diâmetro)}
+\end{aligned}
+\]
+
+\begin{codigo}
+def modelo_tubos():
+    prob = pulp.LpProblem("tubos", pulp.LpMinimize)
+    y = {(j, d): pulp.LpVariable(f"y_{j}_{d}", cat="Binary") for j in range(3) for d in D}
+    # TODO 1: custo total
+    prob += pulp.lpSum(L[j]*preco[d]*y[j, d] for j in range(3) for d in D), "custo"
+    for j in range(3):
+        # TODO 2: exatamente um diâmetro por trecho
+        prob += pulp.lpSum(y[j, d] for d in D) == 1, f"um_diametro_{j}"
+        # TODO 3: vazão mínima (vazao[d] = 0.5*d**2 é um NÚMERO)
+        prob += pulp.lpSum(vazao[d]*y[j, d] for d in D) >= q[j], f"vazao_{j}"
+    # TODO 4: estoque de cada diâmetro
+    for d in D:
+        prob += pulp.lpSum(L[j]*y[j, d] for j in range(3)) <= estoque[d], f"estoque_{d}"
+    return prob, y
+\end{codigo}
+
+\section{Resultado e interpretação}
+
+Para entender a resposta, liste as opções que dão vazão suficiente em cada trecho:
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+trecho & diâmetros com vazão suficiente & custo de cada um\\
+\midrule
+1 ($q=15$, 300 m) & 6, 8, 12, 20, 24 & 3\,600; 5\,400; 9\,000; 21\,000; 30\,000\\
+2 ($q=60$, 200 m) & 12, 20, 24 & 6\,000; 14\,000; 20\,000\\
+3 ($q=150$, 250 m) & 20, 24 & 17\,500; 25\,000\\
+\bottomrule
+\end{tabular}
+\end{center}
+\begin{itemize}
+  \item O trecho 2 queria o diâmetro 12, mas só há 150 m em estoque e ele precisa de 200 m. Então o trecho 2 usa 20
+  ou 24.
+  \item O diâmetro 20 tem 250 m: dá para o trecho 3 (250 m) \emph{ou} para o trecho 2 (200 m), não para os dois.
+  \item Opções: trecho 2 com 20 e trecho 3 com 24 custa $14\,000+25\,000=39\,000$; trecho 2 com 24 e trecho 3 com 20
+  custa $20\,000+17\,500=37\,500$. A segunda é melhor.
+\end{itemize}
+Ótimo: diâmetros $(6,\,24,\,20)$, custo $3\,600+20\,000+17\,500=\mathbf{41\,100}$.
+
+\begin{atencao}[erros típicos]
+\begin{itemize}
+  \item Esquecer o estoque: dá 27\,100 (a dica da verificação avisa).
+  \item Usar $\le 1$ em ``um diâmetro por trecho'': o modelo pode não escolher nenhum, mas aí a vazão falha;
+  use $=1$, que é o que o problema diz.
+  \item Escrever a vazão como \py{0.5*d**2} com \py{d} sendo uma variável do PuLP: não é linear. A potência é
+  calculada \emph{sobre os dados}, antes, no dicionário \py{vazao}.
+\end{itemize}
+\end{atencao}
+
+\begin{resumo}[Para pensar: variável semicontínua]
+Uma variável $x\in\{0\}\cup[\ell,u]$ (``ou desligada, ou entre $\ell$ e $u$'') combina este bloco com o Bloco 1:
+\[
+\ell\,y\le x\le u\,y,\qquad y\in\B.
+\]
+Com $y=0$, $x=0$; com $y=1$, $\ell\le x\le u$.
+\end{resumo}
