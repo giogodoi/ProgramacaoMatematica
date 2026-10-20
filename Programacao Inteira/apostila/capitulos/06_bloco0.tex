@@ -1,0 +1,118 @@
+\chapter{Bloco 0 -- Por que programação inteira? (aquecimento)}
+\label{cap:bloco0}
+
+Este bloco revisita os exemplos do Capítulo~\ref{cap:arredondar}, agora no código. Há um único exercício para
+completar (o modelo de Wolsey); o resto são células para rodar e interpretar.
+
+\section{0.1 -- Exercício: o modelo de Wolsey em PuLP}
+
+\begin{discussao}
+\begin{itemize}
+  \item \emph{Qual a ideia por trás de ``resolver o PL e arredondar''?} Aproveitar a eficiência do simplex,
+  supondo que o ótimo inteiro esteja ``perto'' do ótimo contínuo.
+  \item \emph{O ótimo do PL será inteiro?} Não: é $(1{,}95;\,4{,}92)$. \emph{O arredondamento será viável?}
+  $(2,5)$ não é. \emph{Será ótimo?} O único vizinho viável, $(2,4)$, vale $4{,}56$, e o ótimo inteiro é $5$ em
+  $(5,0)$. Veja a Seção~\ref{sec:wolsey}.
+\end{itemize}
+\end{discussao}
+
+\paragraph{O que o exercício pede.} A função já cria o problema e as duas variáveis; o tipo das variáveis depende do
+parâmetro \py{inteiro}. Faltam três linhas: o objetivo e as duas restrições.
+
+\paragraph{Passo a passo.}
+\begin{enumerate}
+  \item Objetivo $\max\; x_1 + 0{,}64x_2$: como o problema foi criado com \py{LpMaximize}, basta somar a expressão.
+  \item Restrição $50x_1+31x_2\le250$: expressão com \py{<=}.
+  \item Restrição $3x_1-2x_2\ge-4$: expressão com \py{>=}. Não é preciso ``passar para $\le$'': o PuLP aceita
+  \py{>=} diretamente.
+\end{enumerate}
+
+\begin{codigo}
+def modelo_wolsey(inteiro=True):
+    cat = pulp.LpInteger if inteiro else pulp.LpContinuous
+    prob = pulp.LpProblem("wolsey", pulp.LpMaximize)
+    x1 = pulp.LpVariable("x1", lowBound=0, cat=cat)
+    x2 = pulp.LpVariable("x2", lowBound=0, cat=cat)
+    prob += 1.00*x1 + 0.64*x2, "obj"        # função objetivo
+    prob += 50*x1 + 31*x2 <= 250, "c1"      # restrição 1
+    prob += 3*x1 - 2*x2 >= -4, "c2"         # restrição 2
+    return prob, x1, x2
+\end{codigo}
+
+\paragraph{Verificação.} A célula roda o modelo duas vezes, com \py{inteiro=False} (PL) e com \py{inteiro=True}
+(PI), usando a função \py{rodar}. Os valores esperados são $5{,}0984$ e $5$. A célula seguinte desenha a
+Figura~\ref{fig:wolsey} e lista os quatro vizinhos inteiros do ótimo da PL, como na tabela da
+Seção~\ref{sec:wolsey}.
+
+\begin{atencao}
+\begin{itemize}
+  \item Escrever o objetivo depois das restrições funciona, mas ele precisa ser a única expressão
+  \emph{sem} comparação somada ao problema.
+  \item Se aparecer ``Falta definir a função objetivo'', a linha do objetivo não foi executada. Lembre-se de rodar a
+  célula da função \emph{antes} da célula de verificação.
+\end{itemize}
+\end{atencao}
+
+\section{0.1 (continuação) -- O caso binário}
+
+A célula da mochila de 3 itens não tem \py{TODO}: ela enumera todas as $2^3=8$ soluções com
+\py{itertools.product([0, 1], repeat=3)}, que gera todas as tuplas $(x_1,x_2,x_3)$ com valores 0 ou 1. Para cada uma,
+calcula peso e valor e marca se é viável. A saída mostra o que vimos na Seção~\ref{sec:mochila3}: a gulosa (razões
+$4$, $3{,}5$, $3$) pega o item 1 e fica em 12; o ótimo é 13, com os itens 2 e 3.
+
+\begin{resumo}[O que levar desta célula]
+Enumerar funciona para $n=3$ (8 casos), mas $2^n$ explode muito rápido. Gulosas são rápidas, mas sem garantia. É
+por isso que precisamos de modelos e solvers.
+\end{resumo}
+
+\section{0.2 -- Escala de enfermeiras}
+
+Também não há \py{TODO}, mas vale a pena ler o código com cuidado, porque ele usa padrões que você vai repetir.
+
+\begin{codigo}
+d = [17, 13, 15, 19, 14, 16, 11]          # demanda de dom..sáb
+
+def modelo_enfermeiras(d, inteiro=True):
+    prob = pulp.LpProblem("enfermeiras", pulp.LpMinimize)
+    cat = pulp.LpInteger if inteiro else pulp.LpContinuous
+    x = [pulp.LpVariable(f"x_{k}", lowBound=0, cat=cat) for k in range(7)]
+    prob += pulp.lpSum(x), "total"
+    for j in range(7):
+        prob += pulp.lpSum(x[k] for k in range(7) if (j - k) % 7 <= 4) >= d[j], f"dia_{j}"
+    return prob, x
+\end{codigo}
+
+\begin{itemize}
+  \item \py{x[k]} = enfermeiras que \textbf{começam} no dia $k$ (veja a Seção~\ref{sec:enfermeiras} para entender por
+  que essa é a variável certa).
+  \item \py{pulp.lpSum(x)} soma todas as variáveis da lista: o total contratado.
+  \item O laço cria uma restrição por dia $j$. O gerador soma apenas os $x_k$ cujo turno de 5 dias inclui o dia $j$,
+  isto é, $(j-k)\bmod 7\in\{0,1,2,3,4\}$. O operador \texttt{\%} do Python devolve sempre um resto entre 0 e 6, mesmo
+  quando $j-k$ é negativo, o que faz a ``volta'' de sábado para domingo funcionar sozinha.
+\end{itemize}
+
+\paragraph{Saída e leitura.} PL $=22{,}33$, PI $=23$, PL arredondada para cima $=25$. A mensagem central:
+\textbf{arredondar para cima garante viabilidade, mas não otimalidade}; e o limite da PL ($22{,}33$) prova que 23 é o
+melhor possível, já que o total é inteiro e precisa ser $\ge 22{,}33$.
+
+\section{O mapa do resto da aula}
+
+A partir do Bloco 1, a inteireza deixa de vir da natureza do problema e passa a ser uma \textbf{ferramenta de
+modelagem}. Cada bloco ensina uma ``receita'' de linearização, e todas estão reunidas no
+Capítulo~\ref{cap:resumo}:
+
+\begin{center}
+\begin{tabular}{cl}
+\toprule
+Bloco & Técnica\\
+\midrule
+1 & Implicações \emph{se--então} (custo fixo, produção condicionada)\\
+2 & Restrições disjuntivas (\emph{big-M}, escalonamento)\\
+3 & Relações lógicas (tabela-verdade, carteira de investimentos)\\
+4 & Representação de valores discretos\\
+5 & ``Ou exclusivo'' e indicadores (teoria de variáveis lógicas)\\
+6 & Problema da mochila binária\\
+7 & \emph{Bin packing}\\
+\bottomrule
+\end{tabular}
+\end{center}
