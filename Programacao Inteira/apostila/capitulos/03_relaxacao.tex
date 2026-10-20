@@ -1,0 +1,174 @@
+\chapter{Relaxação linear, limitantes e qualidade de um modelo}
+\label{cap:relaxacao}
+
+Este capítulo apresenta o conceito que mais aparece no notebook, mesmo quando não é citado pelo nome: a
+\textbf{relaxação linear}. Ela explica por que o valor de $M$ importa, por que uma formulação ``com mais
+restrições'' pode ser melhor e o que o solver faz por baixo dos panos.
+
+\section{Relaxação linear}
+
+\begin{definicao}[relaxação linear]
+A \textbf{relaxação linear} de um problema inteiro é o mesmo problema sem as exigências de integralidade:
+$x\in\Z_+$ vira $x\ge 0$ e $x\in\B$ vira $0\le x\le 1$. Todo o resto (objetivo e restrições) fica igual.
+\end{definicao}
+
+Como a relaxação aceita \emph{todas} as soluções do problema inteiro e mais algumas (as fracionárias), vale sempre:
+\begin{center}
+\fbox{\begin{minipage}{0.86\linewidth}\centering
+Em \textbf{maximização}: \quad $z_{\text{PL}} \ge z_{\text{PI}}$ \quad (a relaxação dá um \textbf{limite superior});\\[2pt]
+Em \textbf{minimização}: \quad $z_{\text{PL}} \le z_{\text{PI}}$ \quad (a relaxação dá um \textbf{limite inferior}).
+\end{minipage}}
+\end{center}
+Nos exemplos do capítulo anterior: Wolsey (max) tem $5{,}098 \ge 5$; enfermeiras (min) tem $22{,}33\le 23$.
+
+Duas consequências úteis:
+\begin{itemize}
+  \item Se a solução ótima da relaxação \textbf{já é inteira}, ela é ótima para o problema inteiro.
+  \item Se a relaxação é \textbf{inviável}, o problema inteiro também é.
+\end{itemize}
+
+No notebook, a função \py{valor_relaxado(prob)} calcula o valor da relaxação linear de um modelo (ela troca
+temporariamente todas as variáveis para contínuas, resolve e restaura; veja a Seção~\ref{sec:auxiliares}).
+
+\section{Limitantes e \emph{gap}}
+
+Durante a resolução, o solver mantém dois números (pensando em maximização):
+\begin{itemize}
+  \item a \textbf{incumbente}: a melhor solução inteira encontrada até agora, cujo valor é um \textbf{limite
+  inferior} para o ótimo (o ótimo é pelo menos isso);
+  \item um \textbf{limite superior}, que vem das relaxações (o ótimo é no máximo isso).
+\end{itemize}
+A diferença relativa entre eles é o \textbf{gap}:
+\[
+\text{gap} = \frac{\text{limite superior} - \text{incumbente}}{\text{incumbente}}.
+\]
+Quando o gap chega a zero, o solver \textbf{provou} a otimalidade.
+
+\begin{exemplo}[mochila de 10 projetos do Bloco 6]
+A heurística gulosa encontra uma carteira de valor 129 (incumbente), e a relaxação linear diz que não dá para passar
+de 161,12 (limite superior). O gap inicial é $(161{,}12-129)/129\approx 25\%$. O ótimo (142) está em algum lugar
+entre os dois. ``Fechar'' esse intervalo é o trabalho do \emph{branch-and-bound}.
+\end{exemplo}
+
+\section{\emph{Branch-and-bound} em uma página}
+\label{sec:bb}
+
+Você não precisa implementar o \emph{branch-and-bound} (B\&B) neste notebook, porque o solver CBC faz isso. Mas
+entender a ideia explica \textbf{por que modelos com relaxação forte resolvem mais rápido}.
+
+\begin{enumerate}
+  \item Resolva a relaxação linear. Se a solução é inteira, acabou.
+  \item Se alguma variável $x_j$ tem valor fracionário $v$, \textbf{ramifique} (\emph{branch}): crie dois
+  subproblemas, um com $x_j\le\lfloor v\rfloor$ e outro com $x_j\ge\lceil v\rceil$ (para binárias: $x_j=0$ e
+  $x_j=1$). Toda solução inteira está em um dos dois.
+  \item Em cada subproblema, resolva a relaxação. \textbf{Pode} (\emph{bound}) o nó se: (a) for inviável; (b) a
+  relaxação for inteira, caso em que ela vira candidata a incumbente; ou (c) o limite do nó não for melhor que a
+  incumbente.
+  \item Repita até não sobrar nó aberto.
+\end{enumerate}
+
+\begin{exemplo}[B\&B na mochila de 3 itens]
+$\max 12x_1+7x_2+6x_3$ s.a.\ $3x_1+2x_2+2x_3\le4$, $x\in\B^3$. A relaxação de uma mochila se resolve pela
+gulosa \emph{fracionando} o último item que não cabe inteiro (Capítulo~\ref{cap:bloco6}).
+
+\begin{center}
+\begin{tikzpicture}[
+  every node/.style={draw,rounded corners,align=center,font=\footnotesize,fill=white,inner sep=3pt},
+  level distance=17mm, edge from parent/.style={draw,-{Stealth}},
+  level 1/.style={sibling distance=64mm},
+  level 2/.style={sibling distance=33mm},
+  level 3/.style={sibling distance=26mm}]
+\node {raiz: $15{,}5$\\ $x=(1,\frac12,0)$}
+  child {node {$15$\\ $x=(\frac23,1,0)$}
+    child {node[fill=verde!15] {$13$, inteira\\ $x=(0,1,1)$\\ \textbf{incumbente}} edge from parent node[draw=none,left,fill=none] {$x_1=0$}}
+    child {node[fill=black!8] {inviável\\ (peso 5)} edge from parent node[draw=none,right,fill=none] {$x_1=1$}}
+    edge from parent node[draw=none,left,fill=none] {$x_2=1$\ }}
+  child {node {$15$\\ $x=(1,0,\frac12)$}
+    child {node {$14$\\ $x=(\frac23,0,1)$}
+      child {node[fill=black!8] {inviável} edge from parent node[draw=none,left,fill=none] {$x_1=1$}}
+      child {node[fill=black!8] {$6\le13$\\ podado} edge from parent node[draw=none,right,fill=none] {$x_1=0$}}
+      edge from parent node[draw=none,left,fill=none] {$x_3=1$}}
+    child {node[fill=black!8] {$12\le13$\\ podado} edge from parent node[draw=none,right,fill=none] {$x_3=0$}}
+    edge from parent node[draw=none,right,fill=none] {\ $x_2=0$}};
+\end{tikzpicture}
+\end{center}
+O ramo $x_2=1$ encontra a incumbente 13. O ramo $x_2=0$ tem limite 15 $>13$, então ainda precisa ser explorado;
+dentro dele, todos os nós acabam inviáveis ou com valor $\le 13$. Conclusão: \textbf{13 é ótimo}. Se a relaxação
+fosse mais ``apertada'' (limites menores), mais nós seriam podados cedo.
+\end{exemplo}
+
+\begin{outros}[de Land e Doig aos solvers atuais]
+\begin{itemize}
+  \item A ideia de limitar com relaxações lineares e dividir o problema vem de Land e Doig~\cite{landdoig1960}. A
+  ramificação em dois ramos, $x_j\le\lfloor v\rfloor$ e $x_j\ge\lceil v\rceil$, descrita acima, é a variante de
+  Dakin~\cite{dakin1965}, adotada por praticamente todos os solvers.
+  \item Bradley, Hax e Magnanti descrevem o B\&B como uma estratégia de ``dividir para conquistar'': particionar a
+  região viável em pedaços mais fáceis e, se preciso, particionar os pedaços de novo~\cite[Seç.~9.5]{amp}.
+  \item Os \textbf{planos de corte} de Gomory~\cite{gomory1958} acrescentam desigualdades que cortam a solução
+  fracionária da relaxação sem cortar nenhum ponto inteiro. Os solvers modernos, como o CBC usado no notebook,
+  combinam as duas ideias (\emph{branch-and-cut}).
+  \item O progresso é impressionante. Koch et al.\ mediram, de 2001 a 2020, um ganho de cerca de
+  \textbf{50$\times$} nos algoritmos de PLIM e \textbf{20$\times$} no hardware: cerca de \textbf{1000$\times$} no
+  total, ou seja, o que levava 15 minutos passou a levar menos de 1 segundo~\cite{koch2022}. Bixby faz um
+  histórico dessa evolução desde os anos 1990~\cite{bixby2012}.
+\end{itemize}
+\end{outros}
+
+\section{Formulações: o mesmo problema, modelos diferentes}
+\label{sec:formulacoes}
+
+\begin{definicao}[poliedro e formulação]
+Um \textbf{poliedro} é um conjunto da forma $P=\{x\in\R^n : Ax\le b\}$. Um poliedro $P$ é uma \textbf{formulação}
+para um conjunto de pontos inteiros $X$ se $X = P\cap\Z^n$, isto é, os pontos inteiros de $P$ são exatamente as
+soluções do problema.
+\end{definicao}
+
+O mesmo conjunto $X$ admite \textbf{infinitas formulações}: basta ``inclinar'' as restrições sem cortar nem
+acrescentar pontos inteiros. Todas dão o mesmo ótimo inteiro, mas \textbf{relaxações diferentes}.
+
+\begin{definicao}[formulação mais forte e formulação ideal]
+Se $P_1$ e $P_2$ são formulações para $X$ e $P_1\subset P_2$, dizemos que $P_1$ é \textbf{mais forte} (melhor) que
+$P_2$: sua relaxação é mais apertada e dá limites melhores. A formulação \textbf{ideal} é a
+\textbf{envoltória convexa} $\operatorname{conv}(X)$, o menor poliedro convexo que contém todos os pontos de
+$X$. Nela, todos os vértices são inteiros e a relaxação linear já resolve o problema inteiro.
+\end{definicao}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=0.9]
+  \draw[->] (-0.3,0) -- (5,0) node[right] {$x_1$};
+  \draw[->] (0,-0.3) -- (0,4) node[above] {$x_2$};
+  \fill[laranja!18] (0,0) -- (4.4,0) -- (2.6,3.5) -- (0,2.7) -- cycle;
+  \draw[laranja!80!black,thick] (0,0) -- (4.4,0) -- (2.6,3.5) -- (0,2.7) -- cycle;
+  \fill[azul!25] (0,0) -- (4,0) -- (3,2) -- (2,3) -- (1,3) -- (0,2) -- cycle;
+  \draw[azul,thick] (0,0) -- (4,0) -- (3,2) -- (2,3) -- (1,3) -- (0,2) -- cycle;
+  \foreach \p in {(0,0),(1,0),(2,0),(3,0),(4,0),(0,1),(1,1),(2,1),(3,1),(0,2),(1,2),(2,2),(3,2),(1,3),(2,3)}
+     \fill \p circle (2pt);
+  \node[laranja!80!black,font=\small,align=left] at (6.6,2.9) {formulação $P_2$\\ (mais fraca)};
+  \node[azul,font=\small,align=left] at (6.6,1.4) {formulação $P_1 = \operatorname{conv}(X)$\\ (ideal)};
+\end{tikzpicture}
+\caption{Duas formulações para o mesmo conjunto de pontos inteiros (pontos pretos). Ambas contêm exatamente os
+mesmos pontos inteiros, mas a relaxação de $P_2$ inclui muito mais pontos fracionários.}
+\end{figure}
+
+\begin{outros}[para ir além em formulações]
+O survey de Vielma~\cite{vielma2015} é a referência moderna sobre como obter formulações mais fortes (e menores),
+inclusive para disjunções como as do Bloco 2. As notas de aula do curso 15.083J do MIT (Bertsimas e Schulz) dedicam
+as primeiras aulas a formulações e formulações ideais~\cite{ocw15083}.
+\end{outros}
+
+\begin{atencao}[``menos restrições'' $\neq$ ``modelo melhor'']
+Um modelo com mais restrições pode ser \emph{mais forte}: sua relaxação é menor e o B\&B poda mais. Você verá isso
+na prática em dois experimentos do notebook: o valor de $M$ (Blocos 1 e 2) e a formulação agregada
+$\times$ desagregada (Bloco 3).
+\end{atencao}
+
+\section*{Exercícios de fixação}
+\addcontentsline{toc}{section}{Exercícios de fixação}
+\begin{enumerate}[label=\textbf{3.\arabic*}]
+  \item Em um problema de \emph{minimização}, a relaxação deu 40 e a melhor solução inteira conhecida vale 50. O
+  ótimo pode ser 38? Pode ser 45? Pode ser 52? Qual o gap?
+  \item A relaxação linear de um problema binário devolveu uma solução com todas as variáveis em 0 ou 1. O que você
+  pode concluir?
+  \item Por que, no exemplo do B\&B, não foi necessário explorar o ramo $x_3=0$ além do primeiro nó?
+\end{enumerate}
