@@ -1,0 +1,73 @@
+\chapter{Respostas dos exercícios de fixação}
+\label{ap:respostas}
+
+\section*{Capítulo 1}
+\begin{description}
+  \item[1.1] (a) PB (só binárias); (b) PLI (quantidades inteiras e moldes binários, sem contínuas); (c) PLIM
+  (contínuas e uma binária).
+  \item[1.2] (a) contínua basta; (b) inteira; (c) binária; (d) contínua basta.
+  \item[1.3] A PL continua valendo 1000 ($o=5/3$). Inteiras: $o=0,v=5$ custa 1500; $o=1,v=2$ custa 1200; $o=2,v=0$
+  custa 1200. O ótimo é 1200 (duas soluções), e arredondar $o=1{,}67\to2$ agora \emph{acerta}. Moral: às vezes
+  arredondar funciona, mas não há garantia.
+\end{description}
+
+\section*{Capítulo 2}
+\begin{description}
+  \item[2.1] $50\cdot3+31\cdot3=243\le250$ e $3\cdot3-2\cdot3=3\ge-4$: viável, valor $3+1{,}92=4{,}92$. Não é
+  ``vizinho'' porque os vizinhos do ótimo da PL têm $x_1\in\{1,2\}$ e $x_2\in\{4,5\}$.
+  \item[2.2] A gulosa pega o item 1 (peso 3) e depois o item 2 (peso 2): peso 5, valor 19. A enumeração confirma que
+  $(1,1,0)$, com valor 19, é ótimo. A gulosa acerta neste caso, por sorte.
+  \item[2.3] Quarta-feira ($j=3$) é coberta por quem começou em qua, ter, seg, dom e sáb:
+  $x_0+x_1+x_2+x_3+x_6\ge19$.
+\end{description}
+
+\section*{Capítulo 3}
+\begin{description}
+  \item[3.1] Em minimização, a relaxação é limite inferior e a incumbente é limite superior: o ótimo está em
+  $[40,50]$. Então 38 não pode, 45 pode e 52 não pode (já temos uma solução de valor 50). Gap $=(50-40)/50=20\%$.
+  \item[3.2] Essa solução é \textbf{ótima} para o problema binário.
+  \item[3.3] A relaxação desse nó já é inteira ($x_1=1$), com valor $12\le13$: não há o que ramificar e ela é pior
+  que a incumbente. O nó é podado.
+\end{description}
+
+\section*{Capítulo 4}
+\begin{description}
+  \item[4.1] $10y\le x\le50y$, \ $y\in\B$.
+  \item[4.2] Queremos $\delta=0\Rightarrow f\ge0$ com $f=x_1-x_2-2$, cujo mínimo é $0-8-2=-10$. Restrição:
+  $x_1-x_2-2\ge-10\delta$. Teste: $\delta=0$ dá $x_1-x_2\ge2$ \checkmark; \ $\delta=1$ dá $x_1-x_2\ge-8$, que sempre
+  vale \checkmark.
+  \item[4.3] $P_1\Rightarrow\neg P_2\equiv\neg P_1\vee\neg P_2$, que vira $(1-\delta_1)+(1-\delta_2)\ge1$, ou seja,
+  $\delta_1+\delta_2\le1$. Só a linha $(1,1)$ é proibida \checkmark.
+  \item[4.4] $f_i(x)\le M_i(1-\delta_i)$ para $i=1,2,3$, e $\delta_1+\delta_2+\delta_3\ge2$.
+  \item[4.5] (1) A relaxação fica fraca, e o \emph{branch-and-bound} demora muito mais; (2) problemas numéricos: uma
+  binária ``quase zero'' (dentro da tolerância de integralidade) multiplicada por $10^9$ libera valores grandes de
+  $x$, o fenômeno que a Gurobi chama de \emph{trickle flow} (Seção~\ref{sec:escolherM}).
+\end{description}
+
+\section*{Capítulo 5}
+\begin{description}
+  \item[5.1] Veja a função \py{modelo_wolsey} no Capítulo~\ref{cap:bloco0}.
+\end{description}
+
+\chapter{Gabarito de valores ótimos do notebook}
+
+Valores do dicionário \py{ESPERADO} do notebook, para conferir sem rodar a verificação.
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Chave & Valor & Onde\\
+\midrule
+\texttt{wolsey\_lp} / \texttt{wolsey\_ip} & 5,0984 / 5 & Bloco 0\\
+\texttt{fabrica} / \texttt{fabrica\_regra} & 1875 / 1375 & Bloco 1\\
+\texttt{M1} / \texttt{M2} / \texttt{disjuncao} & 120 / 20 / 100 & Bloco 2A\\
+\texttt{1maq} / \texttt{1maq\_release} & 127 / 135 & Bloco 2B\\
+\texttt{investimentos} & 21 & Bloco 3B\\
+\texttt{inv\_rel\_agregada} / \texttt{inv\_rel\_desagregada} & 23,714 / 22,5 & Bloco 3B\\
+\texttt{tubos} & 41\,100 & Bloco 4\\
+\texttt{ressonancia} & 39 & Bloco 5A\\
+\texttt{desconto\_50} / \texttt{\_75} / \texttt{\_90} / \texttt{\_130} & 500 / 750 / 800 / 1040 & Bloco 5B\\
+\texttt{mochila} / \texttt{mochila\_extras} & 142 / 135 & Bloco 6\\
+\texttt{binpacking} & 6 & Bloco 7\\
+\bottomrule
+\end{tabular}
+\end{center}
