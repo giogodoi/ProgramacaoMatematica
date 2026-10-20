@@ -1,0 +1,261 @@
+\chapter{Bloco 5 -- ``Ou exclusivo'' e indicadores (TVL)}
+\label{cap:bloco5}
+
+No Bloco 3, as proposições eram \emph{variáveis} ($\delta_1$, $\delta_2$), e $P_1\xor P_2$ virava simplesmente
+$\delta_1+\delta_2=1$. Agora as proposições são \textbf{restrições}: queremos ``exatamente uma entre $f(x)\le0$ e
+$g(x)\le0$ vale''. Para isso precisamos de binárias que \emph{indiquem} se cada restrição vale, nos dois sentidos.
+
+\section{A receita da teoria de variáveis lógicas (TVL)}
+
+\begin{receita}[indicador $\delta\leftrightarrow f(x)\le0$, com $m\le f(x)\le M$ no domínio]
+O ``se e somente se'' tem uma \textbf{ida} e uma \textbf{volta}:
+\begin{itemize}
+  \item \textbf{Ida} -- $\delta=1\Rightarrow f(x)\le0$:\qquad $f(x)\le M(1-\delta)$.
+  \item \textbf{Volta} -- $\delta=0\Rightarrow f(x)>0$. O solver não trabalha com ``$>$'', então usamos
+  $f(x)\ge\varepsilon$, onde $\varepsilon>0$ é a menor folga que importa:
+  \[
+  \varepsilon - f(x) - (\varepsilon - m)\,\delta \le 0 .
+  \]
+\end{itemize}
+Para o ``ou exclusivo'' entre duas restrições: crie $\delta_1\leftrightarrow f\le0$ e $\delta_2\leftrightarrow g\le0$
+(ida + volta de cada uma) e acrescente $\delta_1+\delta_2=1$.
+\end{receita}
+
+\paragraph{De onde vem a volta?} Queremos ``$\delta=0\Rightarrow \varepsilon-f(x)\le0$''. É o
+Teorema~\ref{teo:binarias} aplicado à função $h(x)=\varepsilon-f(x)$: a restrição é $h(x)-M_h\delta\le0$, com
+$M_h\ge\max h=\varepsilon-\min f=\varepsilon-m$. Substituindo, chegamos a
+$\varepsilon-f(x)-(\varepsilon-m)\delta\le0$. Conferindo pelos casos:
+\begin{itemize}
+  \item $\delta=0$: fica $\varepsilon-f(x)\le0$, isto é, $f(x)\ge\varepsilon$ \checkmark;
+  \item $\delta=1$: fica $m-f(x)\le0$, isto é, $f(x)\ge m$, que sempre vale \checkmark (desligada).
+\end{itemize}
+
+\begin{atencao}[notação dos slides]
+Nos slides, a volta aparece como ``$\epsilon - f(x) - m_1\delta_1\le0$'', onde $m_1$ faz o papel de
+$(\varepsilon-\min f)$. O notebook e esta apostila escrevem $(\varepsilon-m)$ explicitamente, com $m=\min f$, para
+evitar ambiguidade. Cuidado ao misturar as duas notações.
+\end{atencao}
+
+\section{5A -- Zona de ressonância}
+
+\paragraph{O problema.} A velocidade $x\in\{0,1,\dots,100\}$ de um motor \textbf{não pode ficar na zona de
+ressonância} $40\le x\le60$. Há ainda um limite térmico $x\le55$. Maximizar $x$.
+
+\paragraph{A lógica.} ``Fora da zona'' é $(x\le60)\xor(x\ge40)$: exatamente uma das duas vale.
+\begin{center}
+\begin{tikzpicture}[x=1.1mm]
+  \draw[->] (0,0) -- (106,0) node[right] {$x$};
+  \fill[red!25] (40,-0.25) rectangle (60,0.25);
+  \node[red!70!black,font=\small] at (50,0.65) {zona proibida};
+  \draw[azul,thick,|-|] (0,-0.75) -- (60,-0.75) node[midway,below,font=\small] {$x\le60$ ($\delta_1=1$)};
+  \draw[verde!60!black,thick,|-|] (40,-1.55) -- (100,-1.55) node[midway,below,font=\small] {$x\ge40$ ($\delta_2=1$)};
+  \draw[dashed,laranja] (55,-0.4) -- (55,1.1) node[above,font=\small] {$x\le55$};
+  \foreach \t in {0,40,60,100} \node[above,font=\footnotesize] at (\t,0.1) {\t};
+\end{tikzpicture}
+\end{center}
+Para $x<40$, só a primeira vale; para $x>60$, só a segunda; entre 40 e 60, as duas valem, e o ``exclusivo'' proíbe.
+
+\begin{discussao}
+\begin{itemize}
+  \item \emph{Qual o ótimo?} Com $x\le55$, não dá para pular para $x\ge61$. Fora da zona e abaixo de 55, o melhor é
+  $x=39$.
+  \item \emph{As regiões $x\le60$ e $x\ge40$ se sobrepõem. Usando só a ``ida'', o modelo proibiria $x=55$?} Não, como
+  o experimento vai mostrar.
+\end{itemize}
+\end{discussao}
+
+\subsection*{Exercício 5A-1: a função \texttt{indicador}}
+
+A função recebe o valor (ou a expressão) de $f$, o indicador $d$, os limites $M$ e $m$ e o $\varepsilon$, e devolve a
+\textbf{lista} com as duas restrições:
+\begin{codigo}
+def indicador(f, d, M, m, eps):
+    """Restrições que impõem  d = 1  <=>  f <= 0."""
+    ida   = f <= M*(1 - d)                 # d = 1  =>  f <= 0
+    volta = eps - f - (eps - m)*d <= 0     # d = 0  =>  f >= eps
+    return [ida, volta]
+\end{codigo}
+O detalhe elegante é que a \textbf{mesma função} serve para números e para o PuLP. O verificador chama
+\py{indicador} com números ($f(x)$ calculado, $d\in\{0,1\}$), e a comparação \py{<=} devolve \py{True}/\py{False}.
+No modelo, \py{f} e \py{d} são expressões/variáveis do PuLP, e o \py{<=} devolve uma restrição. O verificador testa
+todos os $x\in\{0,\dots,100\}$ e $d\in\{0,1\}$ (202 pares) e exige: as restrições valem $\iff$ ($d=1\iff f(x)\le0$).
+
+\subsection*{Exercício 5A-2: o modelo}
+
+\textbf{Limites.} Para $x\in[0,100]$: $f_1=x-60\in[-60,\,40]$ e $f_2=40-x\in[-60,\,40]$. Logo
+$M_1=M_2=40$ e $m_1=m_2=-60$. Como $x$ é inteiro, ``$f>0$'' equivale a ``$f\ge1$'': $\varepsilon=1$.
+
+\begin{codigo}
+EPS = 1
+def modelo_ressonancia(com_volta=True):
+    prob = pulp.LpProblem("ressonancia", pulp.LpMaximize)
+    x  = pulp.LpVariable("x", lowBound=0, upBound=100, cat="Integer")
+    d1 = pulp.LpVariable("d1", cat="Binary")      # d1 = 1 <=> x <= 60
+    d2 = pulp.LpVariable("d2", cat="Binary")      # d2 = 1 <=> x >= 40
+    prob += 1*x, "velocidade"
+    prob += x <= 55, "limite_termico"
+    f1 = x - 60
+    f2 = 40 - x
+    M1, m1 = 40, -60                              # TODO 1
+    M2, m2 = 40, -60
+    for delta, f_, M_, m_ in ((d1, f1, M1, m1), (d2, f2, M2, m2)):   # TODO 2
+        restr = indicador(f_, delta, M_, m_, EPS)
+        for c in (restr if com_volta else restr[:1]):   # sem volta: só a ida
+            prob += c
+    prob += d1 + d2 == 1, "xor"                   # TODO 3
+    return prob, x, d1, d2
+\end{codigo}
+
+\paragraph{O que essas restrições dizem, em português.} Substituindo os números:
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+& ida & volta\\
+\midrule
+$\delta_1$ & $x-60\le40(1-\delta_1)$: \ se $\delta_1=1$, $x\le60$ & $x\ge61-61\delta_1$: \ se $\delta_1=0$, $x\ge61$\\
+$\delta_2$ & $x\ge40\,\delta_2$: \ se $\delta_2=1$, $x\ge40$ & $x\le39+61\delta_2$: \ se $\delta_2=0$, $x\le39$\\
+\bottomrule
+\end{tabular}
+\end{center}
+Com $\delta_1+\delta_2=1$ há dois casos. Se $(\delta_1,\delta_2)=(1,0)$, então $x\le60$ e $x\le39$, ou seja,
+$x\le39$. Se $(\delta_1,\delta_2)=(0,1)$, então $x\ge61$ e $x\ge40$, ou seja, $x\ge61$, o que é incompatível com
+$x\le55$. O ótimo é \textbf{39}.
+
+\section{Experimento: sem a volta}
+
+Só com as idas, o solver devolve \textbf{55}, \emph{dentro} da zona proibida. Ele escolhe $\delta_1=1$ ($x\le60$
+\checkmark) e $\delta_2=0$. Sem a volta, $\delta_2=0$ \textbf{não tem consequência nenhuma}: o modelo não ``sabe'' que
+$\delta_2=0$ deveria obrigar $x<40$. Com $x=55$, as duas proposições são verdadeiras, violando o ``exclusivo'', mas o
+modelo não percebe. A volta ($\delta_2=0\Rightarrow x\le39$) fecha essa brecha.
+
+\section{5B (desafio) -- Desconto por faixa, onde a volta \emph{não} é necessária}
+
+\paragraph{O problema.} Um fornecedor cobra R\$ 10/kg se $x\le99$ kg e R\$ 8/kg (sobre \emph{todos} os kg) se
+$x\ge100$ kg. Preciso de pelo menos $D$ kg ($x$ inteiro, até $U=300$). Minimizar o custo.
+
+\begin{discussao}
+\begin{enumerate}
+  \item \emph{Para $D=90$: comprar 90 kg ou 100 kg?} $90\times10=900$ contra $100\times8=800$: compensa comprar
+  \textbf{100 kg}. O ponto de indiferença é $10D=800$, ou seja, $D=80$. A partir de 80 kg, vale comprar 100.
+  \item \emph{O custo é $10\,x\,\delta_1+8\,x\,\delta_2$, produto de variável por binária. Como linearizar?} Com
+  variáveis auxiliares $u_1=x\delta_1$ e $u_2=x\delta_2$, mais $u_1+u_2=x$, $u_1\le U\delta_1$ e $u_2\le U\delta_2$.
+  Como exatamente um $\delta$ vale 1, o $u$ correspondente recebe todo o $x$ e o outro é zero.
+  \item \emph{Precisamos da volta?} Não; veja abaixo.
+\end{enumerate}
+\end{discussao}
+
+\paragraph{Indicadores.} $\delta_1\leftrightarrow x\le99$, com $f_1=x-99\in[-99,\,201]$; \ $\delta_2\leftrightarrow
+x\ge100$, com $f_2=100-x\in[-200,\,100]$.
+
+\begin{codigo}
+def modelo_desconto(D, U=300, Q=100, EPS=1):
+    prob = pulp.LpProblem("desconto", pulp.LpMinimize)
+    x  = pulp.LpVariable("x", lowBound=0, upBound=U, cat="Integer")
+    d1 = pulp.LpVariable("d1", cat="Binary")      # d1 = 1 <=> x <= Q-1 (preço cheio)
+    d2 = pulp.LpVariable("d2", cat="Binary")      # d2 = 1 <=> x >= Q   (desconto)
+    u1 = pulp.LpVariable("u1", lowBound=0)        # u1 = x*d1
+    u2 = pulp.LpVariable("u2", lowBound=0)        # u2 = x*d2
+    prob += 10*u1 + 8*u2, "custo"
+    prob += x >= D, "demanda"
+    prob += d1 + d2 == 1, "xor"                                   # TODO 1
+    f1 = x - (Q - EPS); M1, m1 = U - (Q - EPS), -(Q - EPS)        # TODO 2
+    f2 = Q - x;         M2, m2 = Q, Q - U
+    for c in indicador(f1, d1, M1, m1, EPS) + indicador(f2, d2, M2, m2, EPS):
+        prob += c
+    prob += u1 + u2 == x, "soma_u"                                # TODO 3
+    prob += u1 <= U*d1, "u1_ativa"
+    prob += u2 <= U*d2, "u2_ativa"
+    return prob, x
+\end{codigo}
+
+\begin{center}
+\begin{tabular}{lccccccc}
+\toprule
+$D$ (kg) & 50 & 75 & 78 & 80 & 81 & 90 & 130\\
+\midrule
+custo ótimo (R\$) & 500 & 750 & 780 & 800 & 800 & 800 & 1040\\
+\bottomrule
+\end{tabular}
+\end{center}
+Ou seja, $\text{custo}(D)=\min\{10D\ (\text{se } D\le99),\ 8\max(D,100)\}$.
+
+\paragraph{Por que a volta é dispensável aqui?} As regiões $x\le99$ e $x\ge100$ \textbf{particionam} o domínio:
+todo $x$ está em exatamente uma. Com $\delta_1+\delta_2=1$, ``$\delta_2=0$'' é o mesmo que ``$\delta_1=1$'', e a
+\emph{ida} de $\delta_1$ ($x\le99$) já faz o papel da volta de $\delta_2$. Não há como ``trapacear'' escolhendo o
+preço com desconto para $x<100$. Na ressonância, as regiões se sobrepunham (entre 40 e 60 as duas valem), e por isso
+a volta era indispensável. \emph{Teste:} retire a segunda restrição de \py{indicador} em \py{modelo_desconto}; os
+custos não mudam.
+
+\section{5C -- O produto de binárias $\delta_3=\delta_1\delta_2$}
+
+O produto de duas binárias é 1 só quando as duas são 1, ou seja, $\delta_3=1\leftrightarrow(\delta_1=1\wedge\delta_2=1)$,
+que é o mesmo que $\delta_3=1\leftrightarrow\delta_1+\delta_2=2$. Cada sentido vira uma restrição pelo Teorema:
+
+\begin{itemize}
+  \item \textbf{($\Rightarrow$)} $\delta_3=1\Rightarrow 2-\delta_1-\delta_2\le0$. O indicador da implicação é
+  $(1-\delta_3)$ e $\max(2-\delta_1-\delta_2)=2$:
+  \[
+  2-\delta_1-\delta_2-2(1-\delta_3)\le0 \;\Longrightarrow\; -\delta_1-\delta_2+2\delta_3\le0 .
+  \]
+  \item \textbf{($\Leftarrow$)} pela contrapositiva, $\delta_3=0\Rightarrow\delta_1+\delta_2-1\le0$, com
+  $\max(\delta_1+\delta_2-1)=1$:
+  \[
+  \delta_1+\delta_2-1-\delta_3\le0 \;\Longrightarrow\; \delta_1+\delta_2-\delta_3\le1 .
+  \]
+\end{itemize}
+
+\begin{center}
+\begin{tabular}{ccc|c|cc}
+\toprule
+$\delta_1$ & $\delta_2$ & $\delta_3$ & $\delta_3=\delta_1\delta_2$? & $-\delta_1-\delta_2+2\delta_3\le0$ & $\delta_1+\delta_2-\delta_3\le1$\\
+\midrule
+0&0&0& V & \checkmark & \checkmark\\
+0&0&1& F & $\times$ & \checkmark\\
+0&1&0& V & \checkmark & \checkmark\\
+0&1&1& F & $\times$ & \checkmark\\
+1&0&0& V & \checkmark & \checkmark\\
+1&0&1& F & $\times$ & \checkmark\\
+1&1&0& F & \checkmark & $\times$\\
+1&1&1& V & \checkmark & \checkmark\\
+\bottomrule
+\end{tabular}
+\end{center}
+As duas restrições juntas são satisfeitas exatamente nas linhas verdadeiras \checkmark. No verificador (no notebook,
+os nomes usam letras gregas):
+\begin{codigo}
+("d3 = d1*d2   (e)",  3, lambda a, b, c: c == (a and b),
+     lambda a, b, c: (-a - b + 2*c <= 0) and (a + b - c <= 1)),
+("d3 = d1 ou d2 (ou)", 3, lambda a, b, c: c == (a or b),
+     lambda a, b, c: (c >= a) and (c >= b) and (c <= a + b)),
+\end{codigo}
+
+\paragraph{O ``ou'' (desafio).} $\delta_3=\delta_1\vee\delta_2$: se algum é 1, então $\delta_3=1$ ($\delta_3\ge\delta_1$,
+$\delta_3\ge\delta_2$); se os dois são 0, então $\delta_3=0$ ($\delta_3\le\delta_1+\delta_2$).
+
+\begin{atencao}[conexão com o Bloco 3]
+$-\delta_1-\delta_2+2\delta_3\le0$ é a soma de $\delta_3\le\delta_1$ e $\delta_3\le\delta_2$: é a versão
+\emph{agregada}! As duas restrições separadas são equivalentes nos binários e formam uma relaxação mais forte. Ambas
+passam no verificador.
+
+\emph{Observação sobre os slides:} no slide ``Outro exemplo'', a primeira linha traz $\delta_1=1\vee\delta_2=1$, mas a
+derivação que segue é a da \textbf{conjunção} ($\wedge$), que é a correta para o produto.
+\end{atencao}
+
+\begin{receita}[produto de contínua por binária: $u=x\,\delta$, com $0\le x\le U$]
+\[
+u\le U\delta,\qquad u\le x,\qquad u\ge x-U(1-\delta),\qquad u\ge0.
+\]
+Se $\delta=0$: $u\le0$, logo $u=0$. Se $\delta=1$: $u\le x$ e $u\ge x$, logo $u=x$. (No 5B bastaram duas
+restrições porque $u_1+u_2=x$ e $\delta_1+\delta_2=1$ já fazem o resto.)
+\end{receita}
+
+\begin{atencao}[erros típicos do Bloco 5]
+\begin{itemize}
+  \item Na volta, usar $m$ no lugar de $(\varepsilon-m)$; ou trocar o sinal de $f$. O verificador mostra um
+  contraexemplo $(x,\delta)$; refaça os dois casos ($\delta=0$ e $\delta=1$) à mão.
+  \item Calcular $M$ e $m$ errados: lembre que $f_2=40-x$ é \emph{decrescente} em $x$. O máximo ocorre em $x=0$ e o
+  mínimo em $x=100$.
+  \item Com variáveis contínuas, $\varepsilon$ é uma escolha de modelagem (tolerância). Valores muito pequenos causam
+  problemas numéricos.
+\end{itemize}
+\end{atencao}
