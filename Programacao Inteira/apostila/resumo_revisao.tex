@@ -1,0 +1,229 @@
+% Resumo para revisao rapida - Programacao Inteira (Modelagem) - GCC118 (UFLA)
+% Compilar a partir desta pasta:  tectonic resumo_revisao.tex
+\documentclass[10pt,a4paper]{article}
+
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[utf8]{inputenc}
+  \usepackage[T1]{fontenc}
+  \usepackage{lmodern}
+\else
+  \usepackage{fontspec}
+\fi
+\usepackage[brazil]{babel}
+\usepackage[margin=1.7cm,top=1.5cm,bottom=1.7cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{icomma}
+\usepackage{booktabs,tabularx,array}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{multicol}
+\usepackage[most]{tcolorbox}
+\usepackage[hidelinks]{hyperref}
+\usepackage{xurl}
+
+\definecolor{azul}{HTML}{1F4E79}
+\definecolor{laranja}{HTML}{E65100}
+\definecolor{roxo}{HTML}{5E35B1}
+\setlist{leftmargin=*,itemsep=1pt,topsep=2pt}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{3pt}
+\setlength{\columnsep}{16pt}
+\setlength{\emergencystretch}{2em}
+\renewcommand{\arraystretch}{1.12}
+
+\tcbset{rbase/.style={enhanced,breakable,boxrule=0.5pt,arc=2pt,left=4pt,right=4pt,top=2pt,bottom=2pt,
+  fonttitle=\bfseries\small,before skip=5pt,after skip=5pt}}
+\newtcolorbox{bloco}[2][azul]{rbase,colback=#1!4,colframe=#1,title={#2}}
+
+\newcommand{\B}{\{0,1\}}
+\newcommand{\xor}{\mathbin{\triangledown}}
+\newcommand{\py}[1]{\texttt{\detokenize{#1}}}
+
+\makeatletter
+\renewcommand{\section}{\@startsection{section}{1}{0pt}{6pt plus 2pt}{3pt}{\large\bfseries\color{azul}}}
+\makeatother
+\setcounter{secnumdepth}{0}
+
+\begin{document}
+
+\begin{center}
+{\LARGE\bfseries Programação Inteira -- revisão rápida}\\[3pt]
+{\small GCC118 Programação Matemática (UFLA, 2026/2) \;·\; resumo da apostila e do notebook
+\texttt{Aula\_Programacao\_Inteira\_Modelagem.ipynb}}
+\end{center}
+
+\begin{multicols}{2}
+
+\section{1. Conceitos essenciais}
+\begin{itemize}
+  \item \textbf{PLIM}: contínuas e inteiras. \textbf{PLI}: só inteiras. \textbf{PB (0--1)}: só binárias.
+  \item Inteireza por \textbf{natureza} (aviões, pessoas, veículos) ou como \textbf{ferramenta de modelagem}
+  (binárias para decisões e lógica: ``se'', ``ou'', custo fixo).
+  \item \textbf{Relaxação linear}: o mesmo modelo sem a integralidade ($x\in\B\to0\le x\le1$).
+  \item \textbf{Max}: $z_{PL}\ge z_{PI}$ (limite superior). \textbf{Min}: $z_{PL}\le z_{PI}$ (limite
+  inferior).
+  \item Relaxação com solução inteira $\Rightarrow$ ótima. Relaxação inviável $\Rightarrow$ PI inviável.
+  \item \textbf{Gap} (max) $=(\text{limite sup.}-\text{incumbente})/\text{incumbente}$. Gap 0 = ótimo provado.
+  \item \textbf{Branch-and-bound}: resolve relaxações, ramifica em $x_j\le\lfloor v\rfloor$ / $x_j\ge\lceil
+  v\rceil$, poda nós inviáveis, inteiros ou com limite pior que a incumbente.
+  \item \textbf{Formulação mais forte}: $P_1\subset P_2$ com os mesmos pontos inteiros; relaxação menor, menos nós.
+  A ideal é a envoltória convexa.
+\end{itemize}
+
+\section{2. Por que não arredondar}
+\begin{itemize}
+  \item \textbf{Wolsey}: $\max x_1+0{,}64x_2$; PL em $(1{,}95;4{,}92)$ vale 5,098; arredondar dá $(2,5)$
+  \emph{inviável}; ótimo inteiro $(5,0)$ vale 5.
+  \item \textbf{Mochila 3 itens}: gulosa por $c/a$ dá 12; ótimo 13 (itens 2 e 3).
+  \item \textbf{Enfermeiras}: PL 22,33; arredondar para cima 25; ótimo 23. Variável certa:
+  $x_k$ = quantas \emph{começam} no dia $k$.
+\end{itemize}
+
+\section{3. Roteiro de formulação (Wolsey)}
+(1) variáveis $\to$ (2) restrições que aceitam \emph{exatamente} as soluções $\to$ (3) objetivo $\to$ travou?
+Repense as variáveis (em geral falta uma binária).
+
+\section{4. Big-M}
+\begin{bloco}[roxo]{Teorema das variáveis binárias}
+Com $M\ge\max f$: \quad $(\delta=0\Rightarrow f(x)\le0)\iff f(x)\le M\delta$.
+\end{bloco}
+\begin{center}\small
+\begin{tabular}{ll}
+\toprule
+Regra & Restrição\\
+\midrule
+$\delta=0\Rightarrow f\le0$ & $f\le M\delta$\\
+$\delta=1\Rightarrow f\le0$ & $f\le M(1-\delta)$\\
+$\delta=0\Rightarrow f\ge0$ & $f\ge m\delta$ \ ($m\le\min f$)\\
+$x>0\Rightarrow y=1$ & $x\le My$\\
+$y=1\Rightarrow x\ge\ell$ & $x\ge\ell y$\\
+\bottomrule
+\end{tabular}
+\end{center}
+\begin{bloco}[laranja]{Escolha de $M$}
+\textbf{Menor $M$ válido} = maior valor de $f$ quando a restrição deve ficar desligada (use os limites das
+variáveis ou resolva uma PL). Pequeno demais: \emph{modelo errado}. Grande demais: relaxação fraca e
+\emph{trickle flow} (binária ``quase 0'' libera $x>0$).
+\end{bloco}
+
+\section{5. Lógica com binárias}
+$\delta_i=1\iff P_i$ verdadeira. \textbf{Truque:} veja as linhas \emph{falsas} da tabela-verdade e escreva uma
+desigualdade violada só nelas. Cláusula ``ou'': soma dos literais $\ge1$, com $\neg P_i\to(1-\delta_i)$.
+\begin{center}\small
+\begin{tabular}{ll}
+\toprule
+Proposição & Restrição\\
+\midrule
+$\neg P_1$ & $\delta_1=0$\\
+$P_1\wedge P_2$ & $\delta_1+\delta_2=2$\\
+$P_1\vee P_2$ & $\delta_1+\delta_2\ge1$\\
+$P_1\xor P_2$ & $\delta_1+\delta_2=1$\\
+$P_1\Rightarrow P_2$ & $\delta_1\le\delta_2$\\
+$P_1\Leftrightarrow P_2$ & $\delta_1=\delta_2$\\
+$P_1\Rightarrow\neg P_2$ & $\delta_1+\delta_2\le1$\\
+$P_1\wedge P_2\Rightarrow P_3$ & $\delta_1+\delta_2-\delta_3\le1$\\
+$\bigwedge_{i\le k}P_i\Rightarrow\bigvee_{i>k}P_i$ & $\sum_{i\le k}\delta_i-\sum_{i>k}\delta_i\le k-1$\\
+$\ge$ / $=$ / $\le$ $k$ de $n$ & $\sum\delta_i\ge k$ / $=k$ / $\le k$\\
+\bottomrule
+\end{tabular}
+\end{center}
+Implicação só é falsa em $(1,0)$. Agregada $x_2+x_3+x_4\le3x_1$ $\times$ desagregada $x_j\le x_1$: mesmas
+soluções inteiras, mas a desagregada é \textbf{mais forte} (relaxação 22,5 contra 23,71 no Bloco 3).
+
+\section{6. Disjunções e indicadores}
+\textbf{Ou} ($f\le0$ ou $g\le0$): $f\le M_1(1-y)$, \ $g\le M_2y$, com $M_1=\max\{f: g\le0\}$ e
+$M_2=\max\{g:f\le0\}$ no domínio.
+
+\textbf{Sem sobreposição} (tarefas $j<k$): $s_j+p_j\le s_k+M(1-y_{jk})$ e $s_k+p_k\le s_j+My_{jk}$, com
+$M=\sum p_j\,(+\max r_j)$.
+
+\textbf{Indicador} $\delta\leftrightarrow f\le0$ ($m\le f\le M$):
+\begin{itemize}
+  \item ida: $f\le M(1-\delta)$;
+  \item volta: $\varepsilon-f-(\varepsilon-m)\delta\le0$ ($\delta=0\Rightarrow f\ge\varepsilon$).
+\end{itemize}
+``Ou exclusivo'' entre restrições: indicadores (ida + volta) de cada uma e $\delta_1+\delta_2=1$. A volta é
+\textbf{indispensável} quando as regiões se sobrepõem (ressonância: sem ela, $x=55$) e dispensável quando
+particionam o domínio (desconto por faixa).
+
+\textbf{Produtos:}
+\begin{itemize}
+  \item $\delta_3=\delta_1\delta_2$: $\delta_3\le\delta_1$, $\delta_3\le\delta_2$, $\delta_3\ge\delta_1+\delta_2-1$.
+  \item $\delta_3=\delta_1\vee\delta_2$: $\delta_3\ge\delta_1$, $\delta_3\ge\delta_2$, $\delta_3\le\delta_1+\delta_2$.
+  \item $u=x\delta$ ($0\le x\le U$): $u\le U\delta$, $u\le x$, $u\ge x-U(1-\delta)$, $u\ge0$.
+\end{itemize}
+
+\section{7. Valores discretos e semicontínuas}
+$x\in\{v_1,\dots,v_k\}$: $x=\sum v_iy_i$, $\sum y_i=1$. Qualquer $\phi(x)=\sum\phi(v_i)y_i$ fica linear
+(vazão $0{,}5d^2$ nos tubos). Semicontínua $x\in\{0\}\cup[\ell,u]$: $\ell y\le x\le uy$.
+
+\section{8. Problemas clássicos}
+\textbf{Mochila 0--1}: $\max\sum c_jx_j$, $\sum a_jx_j\le b$, $x\in\B^n$. Relaxação = gulosa por $c_j/a_j$
+fracionando o item crítico (limite de Dantzig).
+
+\textbf{Bin packing}: $\min\sum y_i$; $\sum_ix_{ij}=1\ \forall j$; $\sum_jw_jx_{ij}\le by_i\ \forall i$.
+Relaxação fraca ($=\sum w_j/b$); quebre a simetria com $y_i\ge y_{i+1}$. Itens maiores que $b/2$ não dividem
+caixa.
+
+\textbf{Uma máquina}, $\min\sum w_jC_j$: regra de Smith (ordem crescente de $p_j/w_j$), ótima sem datas de
+liberação; prova por troca de vizinhos.
+
+\section{9. PuLP em uma olhada}
+{\footnotesize
+\begin{itemize}
+  \item modelo: \py{LpProblem("n", LpMaximize)}
+  \item variável: \py{LpVariable("x", lowBound=0, cat="Integer")} (ou \py{"Binary"}, \py{"Continuous"})
+  \item objetivo: \py{prob += expr, "obj"} (sem comparação)
+  \item restrição: \py{prob += expr <= b, "nome"}
+  \item somatório: \py{lpSum(c[j]*x[j] for j in J)}
+  \item resolver: \py{prob.solve(PULP_CBC_CMD(msg=0))}
+  \item status: \py{LpStatus[prob.status]}
+  \item solução: \py{x.varValue} e \py{value(prob.objective)}
+\end{itemize}}
+
+\textbf{Proibido:} \py{<}, \py{>}, \py{!=}, produto de variáveis, \py{if} sobre variáveis, nomes repetidos.
+
+\section{10. Gabarito do notebook}
+\begin{center}\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+Bloco & Ótimo\\
+\midrule
+0 Wolsey (PL / PI) & 5,098 / 5\\
+1 Fábrica (1A / 1B) & 1875 / 1375\\
+2A $M_1$, $M_2$, disjunção & 120, 20, 100\\
+2B Uma máquina (sem / com $r_j$) & 127 / 135\\
+3 Investimentos (relax.\ agr./desagr.) & 21 (23,71 / 22,5)\\
+4 Tubos & 41\,100\\
+5A Ressonância & 39\\
+5B Desconto ($D$=50/75/90/130) & 500/750/800/1040\\
+6 Mochila (6A / 6B) & 142 / 135\\
+7 Bin packing & 6 caixas\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{11. Erros que mais aparecem}
+\begin{itemize}
+  \item Custo fixo fora do objetivo ($-s_iy_i$).
+  \item Regra condicional sem a binária ($x_C\ge20$ em vez de $x_C\ge20y_B$).
+  \item $\le1$ onde o enunciado diz ``exatamente um'' ($=1$).
+  \item Capacidade do bin packing sem $y_i$: resposta ``0 caixas''.
+  \item Implicação invertida ($x_5\le x_9$ para ``se 9 então 5'').
+  \item R5: $x_1+x_5\le x_3$ (errado) $\times$ $x_1+x_5-x_3\le1$ (certo).
+  \item Indicador sem a volta, ou volta com $m$ no lugar de $(\varepsilon-m)$.
+  \item $M$ chutado ($10^6$) em vez de calculado.
+\end{itemize}
+
+\end{multicols}
+
+\vspace{-4pt}
+{\footnotesize\textbf{Fontes:} notebook e slides de GCC118 (Moreira e Moreira; Toledo e Costa, ICMC/USP);
+Wolsey, \emph{Integer Programming} (1998); Arenales et al., \emph{Pesquisa Operacional} (2007); Sierksma,
+\emph{Linear and Integer Programming} (1996); Bradley, Hax e Magnanti, \emph{Applied Mathematical Programming},
+cap.~9 (\url{http://web.mit.edu/15.053/www/AMP-Chapter-09.pdf}); Gurobi Help Center, artigo sobre
+\emph{trickle flows} (\url{https://support.gurobi.com/hc/en-us/articles/16565310050833}). Lista completa nas
+Referências da apostila.\par}
+
+\end{document}

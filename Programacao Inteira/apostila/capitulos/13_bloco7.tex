@@ -1,0 +1,121 @@
+\chapter{Bloco 7 -- \emph{Bin packing}}
+\label{cap:bloco7}
+
+Empacotar \textbf{todos} os itens no \textbf{menor número de caixas} de capacidade $b$. É a mochila ``ao
+contrário'': agora todo item entra, e o que queremos minimizar é o número de caixas.
+
+\paragraph{Os dados.} Dez itens de tamanhos $w=(60,36,53,51,58,48,47,48,53,35)$, caixas de capacidade $b=100$. A soma
+dos tamanhos é 489, então o \textbf{limite de volume} é $\lceil489/100\rceil=5$ caixas.
+
+\begin{discussao}
+\begin{enumerate}
+  \item \emph{Quais variáveis?} $x_{ij}=1$ se o item $j$ vai para a caixa $i$; $y_i=1$ se a caixa $i$ é usada.
+  \item \emph{Quantas caixas considerar?} No pior caso, uma por item: $n$ caixas ($i=1,\dots,n$).
+  \item \emph{As duas famílias de restrições?} Todo item vai para \textbf{exatamente uma} caixa, e a capacidade é
+  respeitada, \textbf{mas só se a caixa for usada}. ``Só se usada'' é o Bloco 1 de novo:
+  $\sum_jw_jx_{ij}\le b\,y_i$.
+  \item \emph{Dá para usar 5 caixas?} Não; veja o argumento abaixo.
+\end{enumerate}
+\end{discussao}
+
+\section{O modelo}
+\[
+\begin{aligned}
+\min\;& \sum_{i=1}^{n} y_i\\
+\sa & \sum_{i=1}^{n} x_{ij} = 1 &&\forall j &&\text{(todo item em exatamente uma caixa)}\\
+& \sum_{j=1}^{n} w_j x_{ij} \le b\,y_i &&\forall i &&\text{(capacidade, só se a caixa é usada)}\\
+& x_{ij},\,y_i\in\B.
+\end{aligned}
+\]
+Repare que $b\,y_i$ faz dois papéis ao mesmo tempo: se $y_i=1$, limita a ocupação a $b$; se $y_i=0$, proíbe
+colocar qualquer item na caixa $i$ (é uma restrição de ativação com $M=b$).
+
+\begin{codigo}
+def modelo_binpacking(w, b, simetria=False):
+    n = len(w)
+    prob = pulp.LpProblem("binpacking", pulp.LpMinimize)
+    y = {i: pulp.LpVariable(f"y_{i}", cat="Binary") for i in range(n)}
+    x = {(i, j): pulp.LpVariable(f"x_{i}_{j}", cat="Binary") for i in range(n) for j in range(n)}
+    prob += pulp.lpSum(y.values()), "n_caixas"                                   # TODO 1
+    for j in range(n):                                                           # TODO 2
+        prob += pulp.lpSum(x[i, j] for i in range(n)) == 1, f"item_{j}_em_uma_caixa"
+    for i in range(n):                                                           # TODO 3
+        prob += pulp.lpSum(w[j]*x[i, j] for j in range(n)) <= b*y[i], f"capacidade_{i}"
+    if simetria:                                                                 # desafio
+        for i in range(n-1):
+            prob += y[i] >= y[i+1], f"simetria_{i}"
+    return prob, x, y
+\end{codigo}
+
+\section{Resultado: 6 caixas}
+
+\begin{center}
+\begin{tikzpicture}[x=1.45cm,y=0.032cm]
+  \foreach \cx/\a/\b/\la/\lb in {1/60/35/60/35, 2/58/0/58/, 3/36/53/36/53, 4/51/48/51/48, 5/47/53/47/53, 6/48/0/48/}{
+    \draw[thick] (\cx-0.35,0) rectangle (\cx+0.35,100);
+    \fill[azul!35] (\cx-0.35,0) rectangle (\cx+0.35,\a);
+    \node[font=\small] at (\cx,\a/2) {\la};
+    \ifnum\b>0
+      \fill[verde!35] (\cx-0.35,\a) rectangle (\cx+0.35,\a+\b);
+      \node[font=\small] at (\cx,\a+\b/2) {\lb};
+    \fi
+    \node[below,font=\footnotesize] at (\cx,0) {caixa \cx};
+  }
+  \draw[dashed,red] (0.5,100) -- (6.5,100) node[right,font=\footnotesize] {$b=100$};
+\end{tikzpicture}
+\end{center}
+Ocupações: 95, 58, 89, 99, 100 e 48. A heurística FFD (\emph{First-Fit Decreasing}) do notebook também usa 6 caixas,
+e a relaxação linear vale $4{,}89$.
+
+\paragraph{Por que é impossível usar 5 caixas?} Um argumento curto, só com aritmética:
+\begin{enumerate}
+  \item Há \textbf{cinco itens maiores que 50}: 60, 58, 53, 53 e 51. Dois deles nunca cabem juntos, então cada um
+  ocupa uma caixa diferente. Com 5 caixas, cada caixa teria exatamente um item grande.
+  \item As folgas dessas caixas seriam $40,\ 42,\ 47,\ 47$ e $49$.
+  \item Os itens pequenos são 48, 48, 47, 36 e 35. Dois pequenos juntos somam pelo menos $35+36=71>49$, então cada
+  caixa recebe \emph{no máximo um} pequeno.
+  \item Os \textbf{dois itens de tamanho 48} precisam de folga $\ge48$, mas só a caixa do 51 tem folga 49. Um dos 48
+  fica sem lugar.
+\end{enumerate}
+Logo são necessárias pelo menos 6 caixas, e o solver encontrou 6: \textbf{6 é ótimo}.
+
+\begin{outros}[limitantes para o \emph{bin packing}]
+O passo 1 do argumento é a ideia por trás dos limitantes inferiores clássicos de Martello e Toth: itens maiores que
+metade da capacidade não podem dividir caixa entre si e precisam ser contados separadamente, o que melhora o limite
+de volume $\lceil\sum w_j/b\rceil$~\cite{martellototh1990,delorme2016}. É um exemplo de como raciocínio
+combinatório complementa a relaxação linear.
+\end{outros}
+
+\section{Reflexões: relaxação fraca e simetria}
+
+\paragraph{Relaxação fraca.} Na relaxação, o solver pode usar $y_i=\sum_jw_jx_{ij}/b$, ``meia caixa'' aqui e ali, e
+o valor fica exatamente $\sum_jw_j/b=4{,}89$. A relaxação não ``enxerga'' que itens grandes não se combinam.
+
+\begin{outros}[a formulação ``de Kantorovich'' e alternativas]
+O modelo com $x_{ij}$ e $y_i$ é atribuído a Kantorovich~\cite{kantorovich1960}. Os surveys de Valério de
+Carvalho~\cite{carvalho2002} e de Delorme, Iori e Martello~\cite{delorme2016} registram que sua relaxação linear é
+fraca (vale apenas o limite de volume) e que formulações baseadas em \emph{padrões de corte}, como a de Gilmore e
+Gomory~\cite{gilmoregomory1961}, têm relaxações muito mais fortes, ao custo de um número exponencial de variáveis.
+\end{outros}
+
+\paragraph{Simetria.} As caixas são \textbf{idênticas}: trocar os rótulos de duas caixas gera uma solução
+``diferente'' para o solver, mas igual na prática. Uma solução com $k$ caixas tem $k!$ cópias equivalentes, e o
+\emph{branch-and-bound} pode perder tempo explorando todas.
+
+\paragraph{Quebra de simetria.} Exigir que as caixas sejam usadas \emph{em ordem}:
+\[
+y_i\ge y_{i+1}\qquad(i=1,\dots,n-1).
+\]
+Isso não muda o ótimo (sempre dá para renumerar as caixas usadas como $1,2,\dots,k$), mas elimina as cópias. No
+experimento do notebook com 14 itens, sem a quebra de simetria o CBC bateu o limite de 30 s; com ela, resolveu em
+0,15 s (ambos com 6 caixas). Os tempos variam com máquina e solver, mas a tendência é clara.
+
+\begin{atencao}[erros típicos do Bloco 7]
+\begin{itemize}
+  \item Escrever a capacidade como $\sum_jw_jx_{ij}\le b$ (sem $y_i$): nada liga $y$ aos itens, e o solver zera
+  todos os $y_i$, devolvendo ``0 caixas''.
+  \item Usar $\sum_ix_{ij}\le1$ no lugar de $=1$: o modelo ``descarta'' itens e usa 0 caixas.
+  \item Com \texttt{timeLimit}, o PuLP pode reportar ``Optimal'' para uma solução que é apenas viável. Desconfie de
+  tempos que coincidem com o limite.
+\end{itemize}
+\end{atencao}

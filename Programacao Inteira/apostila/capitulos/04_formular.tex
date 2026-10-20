@@ -1,0 +1,258 @@
+\chapter{Como formular modelos com variáveis inteiras}
+\label{cap:formular}
+
+\section{O ``algoritmo'' de formulação de Wolsey}
+
+Modelar não é adivinhar: há um roteiro que funciona para quase tudo.
+
+\begin{center}
+\begin{tikzpicture}[node distance=7mm, every node/.style={font=\small}]
+  \node[draw,rounded corners,fill=azul!8,text width=36mm,align=center] (v) {\textbf{1.} (Re)defina as\\ variáveis};
+  \node[draw,rounded corners,fill=azul!8,text width=36mm,align=center,right=of v] (r) {\textbf{2.} Escreva restrições cujos pontos viáveis sejam \emph{exatamente} as soluções do problema};
+  \node[draw,rounded corners,fill=azul!8,text width=30mm,align=center,right=of r] (o) {\textbf{3.} Escreva a função objetivo};
+  \node[draw,diamond,aspect=2,fill=laranja!10,below=9mm of r,align=center,inner sep=1pt] (d) {Dificuldade?};
+  \draw[-{Stealth}] (v) -- (r); \draw[-{Stealth}] (r) -- (o);
+  \draw[-{Stealth}] (o) |- (d);
+  \draw[-{Stealth}] (d) -| node[pos=0.25,below] {sim: repense as variáveis} (v);
+\end{tikzpicture}
+\end{center}
+
+\begin{itemize}
+  \item \textbf{Variáveis primeiro.} A escolha das variáveis define o que você consegue escrever. No exemplo das
+  enfermeiras, ``quantas \emph{começam} no dia $k$'' resolveu o problema dos 5 dias consecutivos.
+  \item \textbf{Restrições: nem mais nem menos.} Cada solução do problema real tem que satisfazer todas as
+  restrições (senão você corta soluções boas) e cada ponto que satisfaz as restrições tem que ser uma solução
+  verdadeira (senão o solver ``trapaceia'').
+  \item \textbf{Dificuldade?} Se algo não sai linear, quase sempre falta uma variável (em geral, binária).
+\end{itemize}
+
+\begin{receita}[perguntas para fazer antes de escrever qualquer código]
+\begin{enumerate}
+  \item O que eu \emph{decido}? (variáveis e seus tipos: contínua, inteira, binária)
+  \item O que eu quero \emph{otimizar}? (objetivo; cuidado com custos que só existem ``se'' algo acontece)
+  \item O que \emph{limita} as decisões? (recursos, demandas, regras de negócio, lógica)
+  \item Existe alguma regra do tipo ``se'', ``ou'', ``pelo menos'', ``no máximo'', ``só um''? Então precisaremos de
+  binárias (Seções~\ref{sec:bigM} e \ref{sec:logica}).
+\end{enumerate}
+\end{receita}
+
+\section{Variáveis binárias como indicadores de eventos}
+
+Uma variável binária representa uma \textbf{decisão sim/não} (fazer ou não fazer, comprar ou não comprar) ou
+\textbf{sinaliza um evento}:
+\[
+y = \begin{cases}1 & \text{se o evento ocorre,}\\ 0 & \text{caso contrário.}\end{cases}
+\]
+O desafio é sempre o mesmo: \textbf{amarrar} a binária às outras variáveis usando apenas restrições lineares. A
+ferramenta principal para isso é o \emph{big-M}.
+
+\section{A técnica do \emph{big-M}}
+\label{sec:bigM}
+
+\begin{exemplo}[custo fixo, a motivação]
+Produzir $x$ unidades custa $K(x)=s+cx$ se $x>0$ e $K(0)=0$: há um custo fixo $s$ (preparação de máquina, compra de
+molde, taxa inicial do táxi) que só é pago se produzirmos algo.
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+  \draw[->] (-0.2,0) -- (5,0) node[right] {$x$};
+  \draw[->] (0,-0.2) -- (0,3.6) node[above] {$K(x)$};
+  \fill (0,0) circle (2.5pt);
+  \draw[thick] (0,1.2) -- (4.5,3.2);
+  \draw[fill=white] (0,1.2) circle (2.5pt);
+  \node[left] at (0,1.2) {$s$};
+  \node[right] at (4.5,3.2) {$s+cx$};
+\end{tikzpicture}
+\end{center}
+A função dá um ``salto'' em $x=0$, então não é linear. Solução: criar $y\in\B$ (1 se produzimos) e escrever
+\[
+K = s\,y + c\,x, \qquad x \le M\,y,
+\]
+onde $M$ é a maior produção possível. Se $y=0$, a restrição força $x\le 0$ (não produz, não paga). Se $y=1$, ela
+vira $x\le M$, que não atrapalha (produz à vontade e paga $s$).
+\end{exemplo}
+
+O raciocínio acima é um caso particular de um resultado geral.
+
+\begin{teorema}[Teorema das variáveis binárias, Sierksma]
+\label{teo:binarias}
+Seja $f:D\to\R$ uma função (do domínio $D$ das variáveis $x$), $\delta\in\B$ e $M\ge\max\{f(x):x\in D\}$. Então,
+para todo $x\in D$,
+\[
+\big(\delta = 0 \;\Rightarrow\; f(x)\le 0\big) \quad\Longleftrightarrow\quad f(x) - M\delta \le 0 .
+\]
+\end{teorema}
+\begin{proof}[Por que vale (por casos)]
+Se $\delta=0$, a restrição da direita é $f(x)\le0$, exatamente o que a implicação exige. Se $\delta=1$, a implicação
+não exige nada, e a restrição da direita vira $f(x)\le M$, que é sempre verdadeira porque $M$ é pelo menos o maior
+valor de $f$. Nos dois casos, os dois lados dizem a mesma coisa.
+\end{proof}
+
+Trocando $\delta$ por $1-\delta$ e $f$ por $-f$ obtemos todas as variações de que precisamos (com $M\ge\max f$ e
+$m\le\min f$ no domínio):
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+Quero dizer\ldots & Restrição linear\\
+\midrule
+$\delta=0 \Rightarrow f(x)\le 0$ & $f(x)\le M\delta$\\
+$\delta=1 \Rightarrow f(x)\le 0$ & $f(x)\le M(1-\delta)$\\
+$\delta=0 \Rightarrow f(x)\ge 0$ & $f(x)\ge m\delta$\\
+$\delta=1 \Rightarrow f(x)\ge 0$ & $f(x)\ge m(1-\delta)$\\
+\midrule
+$x>0 \Rightarrow y=1$ \ (com $0\le x\le M$) & $x\le My$\\
+$y=1 \Rightarrow x\ge \ell$ \ (com $x\ge0$) & $x\ge \ell\,y$\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{exemplo}[lendo uma restrição \emph{big-M} pelos casos]
+Variáveis $x_1,x_2\in[0,10]$ e a regra ``se $\delta=1$ então $x_1+x_2\le 5$''. Aqui $f=x_1+x_2-5$, cujo maior
+valor é $10+10-5=15$. Logo
+\[
+x_1+x_2-5 \le 15(1-\delta).
+\]
+\textbf{Teste:} $\delta=1\Rightarrow x_1+x_2\le 5$ \checkmark. \quad $\delta=0\Rightarrow x_1+x_2\le 20$, que
+sempre vale no domínio, então a restrição fica ``desligada'' \checkmark.
+\end{exemplo}
+
+\section{Como escolher o valor de $M$}
+\label{sec:escolherM}
+
+\begin{receita}[o menor $M$ válido]
+$M$ deve ser o \textbf{maior valor que $f$ pode assumir} nas situações em que a restrição deve ficar desligada.
+Calcule-o com os limites das variáveis (ou resolvendo uma pequena PL, como no Bloco 2). Use o menor valor que
+\emph{nunca corta} uma solução válida.
+\end{receita}
+
+\begin{atencao}[$M$ pequeno demais $\times$ grande demais]
+\begin{itemize}
+  \item \textbf{Pequeno demais:} a restrição ``desligada'' ainda corta soluções válidas. O modelo fica
+  \textbf{errado} e o ótimo pode piorar. Ex.: se a fábrica consegue produzir 150 bonecas mas você usa $M=100$,
+  proibiu produzir mais de 100.
+  \item \textbf{Grande demais:} o modelo continua correto, mas (1) a relaxação linear fica \textbf{fraca}: com
+  $M=10^6$, $x\le My$ aceita $y=x/10^6\approx 0$, e o custo fixo quase some da relaxação; e (2) há
+  \textbf{problemas numéricos}: o solver considera inteiro qualquer valor a menos de uma tolerância (por exemplo,
+  $10^{-6}$). Com $M=10^6$ e $y=10^{-6}$ ``igual a zero'', a restrição permite $x=1$ sem pagar o custo fixo!
+\end{itemize}
+\end{atencao}
+
+\begin{outros}[o que dizem os fabricantes de solvers]
+\begin{itemize}
+  \item A Gurobi chama o problema numérico acima de \emph{trickle flow} (``fluxo que vaza''). No exemplo da
+  documentação, com $y\le1\,000\,000\,x$ ($x$ binária) e a tolerância de integralidade padrão de $10^{-5}$, o valor
+  $x=0{,}0000099999$ é aceito como ``zero'' e permite $y=9{,}9999$. A recomendação é usar o \textbf{menor $M$
+  válido} e os limites mais apertados possíveis para as variáveis~\cite{gurobitrickle,gurobibigm}.
+  \item A documentação do AMPL recomenda que os limites usados no \emph{big-M} sejam tão apertados quanto possível,
+  idealmente da ordem de $\pm10^4$, e nunca maiores que o inverso da tolerância de integralidade~\cite{amplnum}.
+  \item Bradley, Hax e Magnanti já davam o mesmo conselho em 1977: em geral é melhor usar o menor valor possível
+  de $M$ para evitar dificuldades numéricas~\cite[Seç.~9.2]{amp}.
+  \item Solvers comerciais (Gurobi, CPLEX) oferecem \textbf{restrições indicadoras}, em que você escreve
+  ``$y=1\Rightarrow f(x)\le0$'' diretamente e o solver cuida da lógica sem um $M$ explícito. No notebook usamos
+  PuLP/CBC, então escrevemos o \emph{big-M} à mão, e entender o \emph{big-M} é o que permite usar bem essas
+  ferramentas.
+\end{itemize}
+\end{outros}
+
+\section{Lógica com variáveis binárias}
+\label{sec:logica}
+
+Uma \textbf{proposição} é uma afirmação que é verdadeira ou falsa (``o investimento 2 é escolhido'', ``a máquina
+opera no modo A''). Associamos a cada proposição simples $P_i$ uma binária $\delta_i$, com $\delta_i=1$ se e somente
+se $P_i$ é verdadeira. Proposições compostas usam conectivos:
+
+\begin{center}
+\begin{tabular}{llcc|ccccc}
+\toprule
+conectivo & leitura & símbolo & & \multicolumn{4}{c}{tabela-verdade para $(P_1,P_2)=$}\\
+& & & & $(1,1)$ & $(1,0)$ & $(0,1)$ & $(0,0)$\\
+\midrule
+negação & não $P_1$ & $\neg P_1$ & & 0 & 0 & 1 & 1\\
+conjunção & $P_1$ e $P_2$ & $P_1\wedge P_2$ & & 1 & 0 & 0 & 0\\
+disjunção inclusiva & $P_1$ ou $P_2$ (ou ambos) & $P_1\vee P_2$ & & 1 & 1 & 1 & 0\\
+disjunção exclusiva & exatamente um & $P_1\xor P_2$ & & 0 & 1 & 1 & 0\\
+implicação & se $P_1$ então $P_2$ & $P_1\Rightarrow P_2$ & & 1 & 0 & 1 & 1\\
+equivalência & $P_1$ se e só se $P_2$ & $P_1\Leftrightarrow P_2$ & & 1 & 0 & 0 & 1\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{atencao}[a implicação só é falsa num caso]
+``Se chover, levo guarda-chuva'' só é \emph{mentira} se chover e eu \emph{não} levar. Se não chover, levar ou não
+levar está tudo bem. Por isso $P_1\Rightarrow P_2$ é falsa apenas em $(P_1,P_2)=(1,0)$.
+\end{atencao}
+
+\begin{receita}[transformar qualquer regra lógica em restrição: ``proibir as linhas falsas'']
+\begin{enumerate}
+  \item Escreva a tabela-verdade e veja \textbf{em quais linhas a regra é falsa}.
+  \item Procure uma desigualdade linear nas $\delta_i$ que seja violada \emph{exatamente} nessas linhas.
+  \item Atalho que sempre funciona para uma cláusula ``ou'': $L_1\vee L_2\vee\cdots$ vira
+  $\sum(\text{literais})\ge1$, trocando cada literal negado $\neg P_i$ por $(1-\delta_i)$.
+\end{enumerate}
+\textbf{Exemplo.} $P_1\Rightarrow P_2$ equivale a $\neg P_1\vee P_2$, que vira $(1-\delta_1)+\delta_2\ge1$, ou seja,
+$\delta_1-\delta_2\le 0$. Conferindo: a única linha que viola $\delta_1\le\delta_2$ é $(1,0)$, exatamente a linha
+falsa \checkmark.
+\end{receita}
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}X l >{\raggedright\arraybackslash}p{3.1cm}}
+\toprule
+Proposição & Restrição & Linha(s) proibida(s)\\
+\midrule
+$\neg P_1$ & $\delta_1=0$ & $\delta_1=1$\\
+$P_1\wedge P_2$ & $\delta_1+\delta_2=2$ & todas exceto $(1,1)$\\
+$P_1\vee P_2$ & $\delta_1+\delta_2\ge1$ & $(0,0)$\\
+$P_1\xor P_2$ & $\delta_1+\delta_2=1$ & $(0,0)$ e $(1,1)$\\
+$P_1\Rightarrow P_2$ & $\delta_1-\delta_2\le0$ & $(1,0)$\\
+$P_1\Leftrightarrow P_2$ & $\delta_1-\delta_2=0$ & $(1,0)$ e $(0,1)$\\
+$P_1\wedge\cdots\wedge P_k\Rightarrow P_{k+1}\vee\cdots\vee P_n$ & $\sum_{i\le k}\delta_i-\sum_{i>k}\delta_i\le k-1$ & $(1,\dots,1,0,\dots,0)$\\
+pelo menos / exatamente / no máximo $k$ de $n$ & $\sum\delta_i\ge k$ \ / \ $=k$ \ / \ $\le k$ & --\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\paragraph{Por que a fórmula geral funciona?} A regra
+$P_1\wedge\cdots\wedge P_k\Rightarrow P_{k+1}\vee\cdots\vee P_n$ só é falsa quando \emph{todos} os $k$ primeiros
+são verdadeiros e \emph{todos} os demais são falsos. Nessa linha, o lado esquerdo vale $k-0=k$, e a restrição
+$\le k-1$ é violada. Em qualquer outra linha, ou algum dos $k$ primeiros é 0, ou algum dos demais é 1, e o lado
+esquerdo fica $\le k-1$.
+
+\begin{outros}[o catálogo de restrições lógicas do livro do MIT]
+Bradley, Hax e Magnanti~\cite[Seç.~9.2]{amp} organizam as restrições lógicas em ``famílias'' que você vai
+reconhecer no notebook (adaptamos a notação: $y_j=1$ quando a restrição $j$ deve valer):
+\begin{itemize}
+  \item \textbf{Restrições alternativas} (pelo menos uma de $f_1\le b_1$, $f_2\le b_2$):
+  $f_j(x)-B_j(1-y_j)\le b_j$ e $y_1+y_2\ge1$. Como basta uma, dá para economizar uma variável: $y_2=1-y_1$. É
+  exatamente a disjunção do Bloco 2.
+  \item \textbf{Restrições condicionais}: ``se $f_1(x)>b_1$ então $f_2(x)\le b_2$''. Ela só é violada quando
+  $f_1>b_1$ \emph{e} $f_2>b_2$, então equivale a ``$f_1\le b_1$ \textbf{ou} $f_2\le b_2$'': de novo uma disjunção.
+  \item \textbf{Alternativas $k$ de $p$}: pelo menos $k$ das $p$ restrições devem valer:
+  $f_j(x)-B_j(1-y_j)\le b_j$ para todo $j$, e $\sum_jy_j\ge k$.
+  \item \textbf{Alternativas compostas}: a região viável é a união de vários ``blocos'' de restrições; usa-se
+  \emph{a mesma} binária para todas as restrições de um bloco.
+\end{itemize}
+\end{outros}
+
+\begin{outros}[indicador de contagem (Unicamp)]
+Nas notas de MC558 da Unicamp~\cite{ravelo}, aparece uma receita útil para \emph{saber} se pelo menos $k$ de $n$
+condições binárias $x_i$ estão satisfeitas, com uma binária $z$ que vale 1 exatamente nesse caso:
+\[
+k-n(1-z)\;\le\;\sum_{i=1}^n x_i\;\le\;k-1+n\,z .
+\]
+Com $z=1$, a da esquerda exige $\sum x_i\ge k$; com $z=0$, a da direita exige $\sum x_i\le k-1$. É a mesma ideia de
+``ida e volta'' do Bloco 5, aplicada a uma soma. Para aprofundar a modelagem lógica, os livros de H.~P.~Williams são
+referência clássica~\cite{williams2013,williams2009}.
+\end{outros}
+
+\section*{Exercícios de fixação}
+\addcontentsline{toc}{section}{Exercícios de fixação}
+\begin{enumerate}[label=\textbf{4.\arabic*}]
+  \item \textbf{Variável semicontínua.} Uma máquina ou fica desligada ($x=0$) ou opera entre 10 e 50 unidades/h.
+  Modele com uma binária $y$.
+  \item Com $x_1,x_2\in[0,8]$, modele ``se $\delta=0$ então $x_1-x_2\ge 2$''.
+  \item Escreva a restrição para ``se $P_1$ então \emph{não} $P_2$'' e confira pela tabela-verdade.
+  \item Dadas três restrições $f_i(x)\le 0$ ($i=1,2,3$) com $f_i\le M_i$ no domínio, modele ``pelo menos duas das
+  três devem valer''.
+  \item Por que usar $M=10^9$ ``para garantir'' é uma má ideia? Dê os dois motivos.
+\end{enumerate}

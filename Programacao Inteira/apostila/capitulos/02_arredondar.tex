@@ -1,0 +1,193 @@
+\chapter{Por que não basta arredondar}
+\label{cap:arredondar}
+
+A primeira ideia de quase todo mundo é: \emph{``resolvo como PL, que é rápido, e arredondo o resultado''}. A
+promessa é sedutora: aproveitar a eficiência do simplex e a ``semelhança'' entre o problema inteiro e o contínuo.
+Este capítulo mostra, com três exemplos, por que essa ideia falha.
+
+\section{O exemplo de Wolsey}
+\label{sec:wolsey}
+
+\[
+\max\; x_1 + 0{,}64\,x_2 \quad \sa 50x_1 + 31x_2 \le 250,\quad 3x_1 - 2x_2 \ge -4,\quad x_1,x_2 \ge 0 \text{ inteiros.}
+\]
+
+\paragraph{Passo 1 -- resolver a PL (ignorando a inteireza).} O ótimo da PL está num vértice. O vértice
+``interessante'' é o encontro das duas retas:
+\[
+\begin{cases} 50x_1 + 31x_2 = 250\\ 3x_1 - 2x_2 = -4 \end{cases}
+\;\Rightarrow\; x_2=\tfrac{3x_1+4}{2}
+\;\Rightarrow\; 50x_1 + \tfrac{31(3x_1+4)}{2}=250
+\;\Rightarrow\; 193x_1 = 376.
+\]
+Logo $x_1 = 376/193 \approx 1{,}95$ e $x_2 = 950/193 \approx 4{,}92$, com valor $984/193\approx 5{,}098$. Os outros
+vértices, $(0,0)$, $(5,0)$ e $(0,2)$, valem $0$, $5$ e $1{,}28$. Então o ótimo da PL é $(1{,}95;\,4{,}92)$.
+
+\paragraph{Passo 2 -- arredondar.} Os quatro vizinhos inteiros do ótimo da PL são:
+\begin{center}
+\begin{tabular}{ccccc}
+\toprule
+ponto & $50x_1+31x_2\le250$? & $3x_1-2x_2\ge-4$? & viável? & valor\\
+\midrule
+$(1,4)$ & $174$ \checkmark & $-5$ $\times$ & não & --\\
+$(1,5)$ & $205$ \checkmark & $-7$ $\times$ & não & --\\
+$(2,4)$ & $224$ \checkmark & $-2$ \checkmark & \textbf{sim} & $4{,}56$\\
+$(2,5)$ & $255$ $\times$ & $-4$ \checkmark & não & --\\
+\bottomrule
+\end{tabular}
+\end{center}
+O arredondamento ``natural'' $(2,5)$ é \textbf{inviável}. O único vizinho viável vale $4{,}56$.
+
+\paragraph{Passo 3 -- o ótimo inteiro de verdade.} Testando todos os pontos inteiros viáveis (são poucos; veja a
+figura), o melhor é $(5,0)$, com valor $5$, \textbf{do outro lado} do polígono. O segundo melhor é $(3,3)$, com
+$4{,}92$.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=0.95]
+  \fill[azul!15] (0,0) -- (5,0) -- (1.948,4.922) -- (0,2) -- cycle;
+  \draw[->] (-0.3,0) -- (6.3,0) node[right] {$x_1$};
+  \draw[->] (0,-0.3) -- (0,6.4) node[above] {$x_2$};
+  \foreach \i in {1,...,6} \draw (\i,0.08) -- (\i,-0.08) node[below] {\small\i};
+  \foreach \i in {1,...,6} \draw (0.08,\i) -- (-0.08,\i) node[left] {\small\i};
+  \draw[thick] (1.16,6.2) node[above left] {\small $50x_1+31x_2=250$} -- (5.2,-0.32);
+  \draw[thick] (0,2) -- (2.8,6.2) node[above right] {\small $3x_1-2x_2=-4$};
+  \foreach \p in {(0,0),(0,1),(0,2),(1,0),(1,1),(1,2),(1,3),(2,0),(2,1),(2,2),(2,3),(2,4),(3,0),(3,1),(3,2),(3,3),(4,0),(4,1),(5,0)}
+    \fill[azul] \p circle (2.2pt);
+  \node[star,star points=5,fill=red,inner sep=1.6pt] at (1.948,4.922) {};
+  \node[right,red] at (2.4,4.45) {\small ótimo da PL $\approx(1{,}95;\,4{,}92)$};
+  \draw[very thick] (1.88,4.88) -- (2.12,5.12) (1.88,5.12) -- (2.12,4.88);
+  \node[right] at (2.3,5.2) {\small $(2,5)$ inviável};
+  \node[star,star points=5,fill=verde,inner sep=2pt] at (5,0) {};
+  \node[right,verde] at (5.2,0.55) {\small ótimo inteiro $(5,0)$};
+\end{tikzpicture}
+\caption{Exemplo de Wolsey: região viável da PL (azul claro), pontos inteiros viáveis (pontos azuis), ótimo da PL
+(estrela vermelha) e ótimo inteiro (estrela verde). O ótimo inteiro está longe do ótimo da PL.}
+\label{fig:wolsey}
+\end{figure}
+
+\begin{resumo}[Lição]
+Arredondar a solução da PL pode dar (1) uma solução \textbf{inviável} ou (2) uma solução viável mas
+\textbf{longe do ótimo}. O ótimo inteiro pode estar ``do outro lado'' da região viável.
+\end{resumo}
+
+\section{Outro exemplo clássico: o livro do MIT}
+
+Bradley, Hax e Magnanti~\cite[Seç.~9.4]{amp} usam um exemplo igualmente pequeno para mostrar o mesmo fenômeno:
+\[
+\max\; 5x_1+8x_2\quad\sa x_1+x_2\le6,\quad 5x_1+9x_2\le45,\quad x_1,x_2\ge0\text{ inteiros.}
+\]
+\begin{center}
+\begin{minipage}{0.42\linewidth}
+\centering
+\begin{tikzpicture}[scale=0.62]
+  \fill[verde!15] (0,0) -- (6,0) -- (2.25,3.75) -- (0,5) -- cycle;
+  \draw[->] (-0.3,0) -- (7,0) node[right] {$x_1$};
+  \draw[->] (0,-0.3) -- (0,6.4) node[above] {$x_2$};
+  \foreach \i in {1,...,6} \draw (\i,0.08) -- (\i,-0.08) node[below] {\scriptsize\i};
+  \foreach \i in {1,...,6} \draw (0.08,\i) -- (-0.08,\i) node[left] {\scriptsize\i};
+  \draw (0,6) -- (6.3,-0.3);
+  \draw (-0.2,5.11) -- (7,1.11);
+  \foreach \p in {(0,0),(0,1),(0,2),(0,3),(0,4),(0,5),(1,0),(1,1),(1,2),(1,3),(1,4),(2,0),(2,1),(2,2),(2,3),(3,0),(3,1),(3,2),(3,3),(4,0),(4,1),(4,2),(5,0),(5,1),(6,0)}
+    \fill[verde!50!black] \p circle (2pt);
+  \node[star,star points=5,fill=red,inner sep=1.4pt] at (2.25,3.75) {};
+  \draw[very thick] (1.85,3.85) -- (2.15,4.15) (1.85,4.15) -- (2.15,3.85);
+  \draw[thick,azul] (2,3) circle (5pt);
+  \node[star,star points=5,fill=azul,inner sep=1.8pt] at (0,5) {};
+\end{tikzpicture}
+\end{minipage}%
+\begin{minipage}{0.56\linewidth}
+\footnotesize
+\begin{tabular}{lccc}
+\toprule
+& $x_1$ & $x_2$ & $z$\\
+\midrule
+ótimo da PL ({\color{red}$\bigstar$}) & 2,25 & 3,75 & 41,25\\
+arredondado ($\times$) & 2 & 4 & inviável\\
+viável mais próximo ($\circ$) & 2 & 3 & 34\\
+ótimo inteiro ({\color{azul}$\bigstar$}) & 0 & 5 & \textbf{40}\\
+\bottomrule
+\end{tabular}
+\end{minipage}
+\end{center}
+O ponto inteiro mais próximo do ótimo da PL é inviável ($5\cdot2+9\cdot4=46>45$), e o ponto viável mais próximo
+vale 34, longe do ótimo 40. Os autores observam ainda que, mudando a escala dos coeficientes, dá para construir
+exemplos em que o ótimo inteiro fica \textbf{tão longe quanto se queira} da solução arredondada, tanto em valor quanto
+em distância no plano.
+
+\section{O caso binário é ainda pior}
+\label{sec:mochila3}
+
+\[
+\max\; 12x_1 + 7x_2 + 6x_3 \quad \sa 3x_1 + 2x_2 + 2x_3 \le 4,\quad x\in\B^3.
+\]
+Pense em três itens com valores 12, 7 e 6 e pesos 3, 2 e 2, numa mochila de capacidade 4. Uma estratégia
+``gulosa'' razoável é pegar primeiro o item com maior \textbf{razão valor/peso}: $12/3=4$, $7/2=3{,}5$ e $6/2=3$. A
+gulosa pega o item 1 (peso 3) e não cabe mais nada: valor \textbf{12}. Mas olhe a enumeração completa:
+\begin{center}
+\begin{tabular}{ccc|cc|c}
+\toprule
+$x_1$ & $x_2$ & $x_3$ & peso & valor & viável?\\
+\midrule
+0&0&0&0&0&sim\\ 0&0&1&2&6&sim\\ 0&1&0&2&7&sim\\ 0&1&1&4&\textbf{13}&\textbf{sim}\\
+1&0&0&3&12&sim\\ 1&0&1&5&18&não\\ 1&1&0&5&19&não\\ 1&1&1&7&25&não\\
+\bottomrule
+\end{tabular}
+\end{center}
+O ótimo é levar os itens 2 e 3 (valor 13). E ``arredondar'' uma variável binária fracionária significa jogá-la
+para 0 ou para 1, ou seja, tomar uma \emph{decisão completamente diferente}. Com binárias não existe ``perto''.
+
+\section{Quando a inteireza é natural: escala de enfermeiras}
+\label{sec:enfermeiras}
+
+Cada enfermeira trabalha \textbf{5 dias consecutivos} e folga 2. A demanda de enfermeiras nos dias de domingo a
+sábado é $d=(17,13,15,19,14,16,11)$. Queremos contratar o mínimo de enfermeiras.
+
+\paragraph{A escolha da variável é o pulo do gato.} Se usássemos ``número de enfermeiras trabalhando no dia $j$'', não
+conseguiríamos garantir os 5 dias consecutivos. A variável certa é
+\[
+x_k = \text{número de enfermeiras que \textbf{começam} a escala no dia } k,\qquad k=0,\dots,6\ (\text{dom},\dots,\text{sáb}).
+\]
+Quem começa no dia $k$ trabalha nos dias $k, k+1, \dots, k+4$ (contando ``em círculo'': depois de sábado vem
+domingo). Então o dia $j$ é coberto por quem começou em $j, j-1, j-2, j-3$ ou $j-4$. Por exemplo, o domingo ($j=0$)
+é coberto por quem começou em dom, sáb, sex, qui e qua:
+\[
+x_0 + x_3 + x_4 + x_5 + x_6 \ge 17.
+\]
+O modelo completo é
+\[
+\min \sum_{k=0}^{6} x_k \quad\sa \sum_{k:\;(j-k)\bmod 7\,\le\,4} x_k \ge d_j\quad (j=0,\dots,6),\qquad x_k\in\Z_+.
+\]
+A condição $(j-k) \bmod 7 \le 4$ diz exatamente ``o dia $j$ está entre os 5 dias de quem começou em $k$''. No notebook
+ela aparece como \texttt{(j - k) \% 7 <= 4}.
+
+\paragraph{Resultados.}
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+& solução & total\\
+\midrule
+PL (contínua) & $(1{,}33;\ 5{,}33;\ 0;\ 7{,}33;\ 0;\ 3{,}33;\ 5)$ & $22{,}33$\\
+PL arredondada para cima & $(2,6,0,8,0,4,5)$ & $25$\\
+Ótimo inteiro & $(2,6,0,7,0,3,5)$ & $\mathbf{23}$\\
+\bottomrule
+\end{tabular}
+\end{center}
+``6,33 enfermeiras'' não faz sentido. Arredondar \emph{cada} variável para cima garante viabilidade (só
+aumentamos a cobertura), mas gasta 2 enfermeiras a mais que o necessário. O ótimo inteiro é 23 e, como a PL vale
+22,33, sabemos que \emph{nenhuma} escala usa 22 ou menos (a PL é um limite inferior; veja o
+Capítulo~\ref{cap:relaxacao}).
+
+\begin{atencao}[a solução da PL não é única]
+A PL das enfermeiras tem vários ótimos com valor $22{,}33$. Outro solver pode devolver outra solução fracionária
+(e outro arredondamento). O valor $22{,}33$, porém, é sempre o mesmo.
+\end{atencao}
+
+\section*{Exercícios de fixação}
+\addcontentsline{toc}{section}{Exercícios de fixação}
+\begin{enumerate}[label=\textbf{2.\arabic*}]
+  \item No exemplo de Wolsey, verifique que $(3,3)$ é viável e calcule seu valor. Por que ele não aparece entre os
+  ``vizinhos'' do ótimo da PL?
+  \item Na mochila de 3 itens, a capacidade passa a ser 5. Refaça a gulosa e a enumeração. A gulosa acerta agora?
+  \item Escreva a restrição de cobertura da quarta-feira ($j=3$) no modelo das enfermeiras.
+\end{enumerate}

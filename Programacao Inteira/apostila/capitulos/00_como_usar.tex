@@ -1,0 +1,73 @@
+\chapter*{Como usar esta apostila}
+\addcontentsline{toc}{chapter}{Como usar esta apostila}
+
+Esta apostila foi escrita para quem está tendo o \textbf{primeiro contato com programação inteira}. Supomos
+apenas que você já viu o básico de programação linear (variáveis, função objetivo, restrições, região viável) e que
+sabe programar em Python. Tudo o mais é construído aqui, com calma e com exemplos.
+
+O objetivo é que, ao final, você consiga resolver sozinho(a) todos os exercícios do notebook
+\texttt{Aula\_Programacao\_Inteira\_Modelagem.ipynb} e, mais importante, \emph{entenda por que} cada modelo é
+escrito do jeito que é.
+
+\section*{Organização}
+
+\begin{description}
+  \item[Parte I -- Fundamentos.] O que é programação inteira, por que ela é necessária, por que ``resolver como PL e
+  arredondar'' não funciona, o que é relaxação linear, como se formula um modelo, o que é o famoso \emph{big-M}, um
+  pouco de lógica com variáveis binárias e um tutorial de PuLP (a biblioteca Python usada no notebook).
+  \item[Parte II -- O notebook passo a passo.] Um capítulo por bloco do notebook (blocos 0 a 7). Em cada um:
+  o problema, as respostas às perguntas da discussão, a construção do modelo matemático, a tradução para código, a
+  interpretação do resultado e os erros mais comuns.
+  \item[Apêndice.] Respostas dos exercícios de fixação e tabela com os valores ótimos esperados.
+\end{description}
+
+\section*{Como o notebook está organizado}
+
+Cada bloco do notebook segue sempre a mesma dinâmica:
+\begin{center}
+\textbf{Discussão} $\;\rightarrow\;$ \textbf{Modelo} (no quadro) $\;\rightarrow\;$ \textbf{Exercício} (você completa os
+\texttt{\# TODO}) $\;\rightarrow\;$ \textbf{Verificação}
+\end{center}
+As células de \textbf{Verificação} comparam o seu resultado com o gabarito \emph{sem revelar o valor}: aparece
+``correto'' ou ``não bate com o gabarito'' (às vezes com uma dica). As células de \textbf{Solução de referência} ficam
+ocultas; rodá-las sobrescreve a sua versão. Sugestão: só abra a solução depois de tentar, e use esta apostila
+como ``professor particular'' quando travar.
+
+\section*{Caixas usadas no texto}
+
+\begin{definicao}[conceito formal]
+Definições que você precisa saber de cor.
+\end{definicao}
+\begin{exemplo}[exemplo resolvido]
+Pequenos problemas resolvidos do início ao fim, com todos os passos.
+\end{exemplo}
+\begin{receita}[técnica de modelagem]
+Uma ``fórmula'' pronta para transformar uma regra em restrições lineares.
+\end{receita}
+\begin{atencao}[erros comuns]
+Armadilhas em que quase todo mundo cai na primeira vez.
+\end{atencao}
+\begin{outros}[outras fontes]
+Complementos de livros, artigos, cursos abertos e documentação de solvers, sempre com a referência
+(lista completa no fim da apostila).
+\end{outros}
+
+\section*{Fontes}
+
+A apostila segue o notebook da disciplina~\cite{notebook} e os slides \emph{Programação inteira --
+Modelagem}~\cite{slides}, que por sua vez se baseiam em Wolsey~\cite{wolsey1998}, Arenales et
+al.~\cite{arenales2007} e Sierksma~\cite{sierksma1996}. Para ampliar a visão, incluímos material de outros autores,
+como o capítulo de programação inteira do livro do MIT de Bradley, Hax e Magnanti~\cite{amp}, artigos históricos
+(Land e Doig, Gomory, Dantzig, Smith), surveys e a documentação de solvers comerciais. Todas as fontes estão nas
+Referências.
+
+\section*{Roteiro de estudo sugerido}
+
+\begin{enumerate}
+  \item Leia os Capítulos~1 a 4 antes da aula (ou antes de abrir o notebook).
+  \item Faça os exercícios de fixação do fim de cada capítulo e confira no Apêndice.
+  \item Leia o Capítulo~5 (PuLP) com o notebook aberto e rode as duas primeiras células.
+  \item Para cada bloco do notebook: tente sozinho(a); se travar, leia a seção correspondente da Parte~II até o ponto em
+  que destravar, e volte ao código.
+  \item No fim, revise o quadro-resumo do Capítulo~14.
+\end{enumerate}

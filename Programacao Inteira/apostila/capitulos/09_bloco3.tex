@@ -1,0 +1,170 @@
+\chapter{Bloco 3 -- Relações lógicas}
+\label{cap:bloco3}
+
+Associamos a cada proposição simples $P_i$ uma binária $\delta_i$ ($\delta_i=1\iff P_i$ verdadeira). Proposições
+compostas viram \textbf{restrições lineares sobre os $\delta_i$}. Releia a Seção~\ref{sec:logica} antes de
+começar: lá está a técnica de ``proibir as linhas falsas'' da tabela-verdade.
+
+\section{3A -- Laboratório da tabela-verdade}
+
+\paragraph{Como o verificador funciona.} Cada desafio é uma tupla
+\py{(nome, nº de variáveis, regra lógica, restrição linear)}. A função \py{verificar_logicas} testa \textbf{todas} as
+$2^n$ atribuições de 0/1 e compara: a restrição deve ser satisfeita \emph{exatamente} nas linhas em que a regra é
+verdadeira. Você escreve a restrição como uma \py{lambda} que devolve \py{True}/\py{False}; para combinar várias
+restrições, use \py{and}.
+
+\begin{discussao}
+\begin{itemize}
+  \item \emph{$\delta_1+\delta_2\ge1$ representa qual conectivo?} O ``ou inclusivo'': só a linha $(0,0)$ viola.
+  \emph{E $\delta_1-\delta_2\le0$?} A implicação $P_1\Rightarrow P_2$: só a linha $(1,0)$ viola.
+  \item \emph{Como representar $P_1\Rightarrow P_2$?} Ela só é falsa em $P_1=1, P_2=0$. Precisamos de uma restrição
+  violada só nessa linha: $\delta_1\le\delta_2$.
+\end{itemize}
+\end{discussao}
+
+\subsection*{Derivando cada linha do exercício}
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{lXl}
+\toprule
+Regra & Raciocínio (linhas falsas $\to$ restrição) & \py{lambda}\\
+\midrule
+$\neg P_1$ & falsa em $\delta_1=1$ & \py{a == 0}\\
+$P_1\wedge P_2$ & verdadeira só em $(1,1)$: a soma tem que ser 2 & \py{a + b == 2}\\
+$P_1\vee P_2$ & falsa só em $(0,0)$: soma $\ge1$ & \py{a + b >= 1}\\
+$P_1\xor P_2$ & falsa em $(0,0)$ e $(1,1)$: soma exatamente 1 & \py{a + b == 1}\\
+$P_1\Rightarrow P_2$ & $\neg P_1\vee P_2$: $(1-a)+b\ge1$ & \py{a - b <= 0}\\
+$P_1\Leftrightarrow P_2$ & falsa em $(1,0)$ e $(0,1)$: iguais & \py{a - b == 0}\\
+$P_1\wedge P_2\Rightarrow P_3$ & falsa só em $(1,1,0)$; fórmula geral com $k=2$ & \py{a + b - c <= 1}\\
+$P_1\Rightarrow P_2\vee P_3$ & falsa só em $(1,0,0)$; fórmula geral com $k=1$ & \py{a - b - c <= 0}\\
+pelo menos 2 de 4 & contar os verdadeiros & \py{a + b + c + d >= 2}\\
+exatamente 2 de 4 & idem & \py{a + b + c + d == 2}\\
+no máximo 1 de 4 & exclusão mútua & \py{a + b + c + d <= 1}\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{exemplo}[conferindo $P_1\wedge P_2\Rightarrow P_3$ pela tabela]
+\begin{center}
+\begin{tabular}{ccc|c|c|c}
+\toprule
+$\delta_1$ & $\delta_2$ & $\delta_3$ & regra & $\delta_1+\delta_2-\delta_3$ & $\le1$?\\
+\midrule
+1&1&1& V & 1 & sim\\
+1&1&0& \textbf{F} & \textbf{2} & \textbf{não}\\
+1&0&$*$& V & $\le1$ & sim\\
+0&1&$*$& V & $\le1$ & sim\\
+0&0&$*$& V & $\le0$ & sim\\
+\bottomrule
+\end{tabular}
+\end{center}
+A restrição é violada exatamente na única linha falsa \checkmark.
+\end{exemplo}
+
+\begin{atencao}[o verificador aceita, mas o solver não]
+O verificador avalia expressões Python sobre números 0/1, então aceita coisas como \py{a + b > 0} ou
+\py{a - b != 0}, que dão o resultado certo na tabela. Mas \textbf{nenhum solver de PL/PI aceita \py{>} estrito nem
+\py{!=}}. Treine escrever a versão que funcionaria no PuLP: \py{a + b >= 1} e \py{a + b == 1}.
+\end{atencao}
+
+\section{3B -- Carteira de investimentos}
+
+\paragraph{O problema.} Cinco investimentos ($x_j=1$ se investir em $j$), orçamento 14.
+\begin{center}
+\begin{tabular}{lccccc}
+\toprule
+investimento $j$ & 1 & 2 & 3 & 4 & 5\\
+\midrule
+retorno & 5 & 6 & 4 & 10 & 10\\
+custo & 4 & 6 & 5 & 3 & 5\\
+\bottomrule
+\end{tabular}
+\end{center}
+Regras: \textbf{R0} orçamento; \textbf{R1} no máximo 3 investimentos; \textbf{R2} investimento 1 \textbf{ou} 2;
+\textbf{R3} \textbf{se} 2 \textbf{então} 1; \textbf{R4} \textbf{se} 2, 3 \textbf{ou} 4 \textbf{então} 1; \textbf{R5}
+\textbf{se} 1 \textbf{e} 5 \textbf{então} 3.
+
+\subsection*{Traduzindo regra por regra}
+
+\begin{center}
+\begin{tabularx}{\linewidth}{lXl}
+\toprule
+Regra & Lógica & Restrição\\
+\midrule
+R0 & orçamento & $4x_1+6x_2+5x_3+3x_4+5x_5\le14$\\
+R1 & no máximo 3 de 5 & $x_1+x_2+x_3+x_4+x_5\le3$\\
+R2 & $P_1\vee P_2$ (inclusivo) & $x_1+x_2\ge1$\\
+R3 & $P_2\Rightarrow P_1$ & $x_2\le x_1$\\
+R4 & $P_2\Rightarrow P_1$, $P_3\Rightarrow P_1$, $P_4\Rightarrow P_1$ & (a) $x_2+x_3+x_4\le3x_1$ \ ou \ (b) $x_j\le x_1$, $j=2,3,4$\\
+R5 & $P_1\wedge P_5\Rightarrow P_3$ ($k=2$) & $x_1+x_5-x_3\le1$\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\paragraph{Por que (a) funciona para R4?} Se $x_1=0$, então $x_2+x_3+x_4\le0$ e nenhum dos três pode ser escolhido.
+Se $x_1=1$, então $x_2+x_3+x_4\le3$, que sempre vale. O coeficiente 3 é o ``$M$'' (o maior valor possível da
+soma).
+
+\begin{codigo}
+def modelo_investimentos(desagregada=True):
+    prob = pulp.LpProblem("investimentos", pulp.LpMaximize)
+    x = {j: pulp.LpVariable(f"x{j}", cat="Binary") for j in J}
+    prob += pulp.lpSum(retorno[j]*x[j] for j in J), "retorno"
+    prob += pulp.lpSum(custo[j]*x[j] for j in J) <= ORC, "R0_orcamento"
+    prob += pulp.lpSum(x[j] for j in J) <= 3, "R1_max3"
+    prob += x[1] + x[2] >= 1, "R2_1_ou_2"
+    prob += x[2] <= x[1], "R3_2_implica_1"
+    if desagregada:                                     # R4 (b): uma por investimento
+        for j in (2, 3, 4):
+            prob += x[j] <= x[1], f"R4_{j}_implica_1"
+    else:                                               # R4 (a): agregada
+        prob += x[2] + x[3] + x[4] <= 3*x[1], "R4_agregada"
+    prob += x[1] + x[5] - x[3] <= 1, "R5_1e5_implica_3"
+    return prob, x
+\end{codigo}
+Note que o dicionário \py{x} é indexado de 1 a 5 (\py{J = range(1, 6)}), igual ao enunciado.
+
+\paragraph{Resultado.} Ótimo \textbf{21}, com os investimentos $\{1,2,4\}$ (custo $4+6+3=13$). Sem R5, o ótimo seria
+25 com $\{1,4,5\}$; R5 exige o 3 junto com 1 e 5, e com o 3 seriam 4 investimentos, o que viola R1.
+
+\begin{atencao}[diagnóstico pelo resultado]
+\begin{itemize}
+  \item Deu \textbf{26} com $\{2,4,5\}$? Faltam R3/R4: o investimento 2 está sem o 1.
+  \item Deu \textbf{25} com $\{1,4,5\}$? Falta (ou está errada) a R5.
+  \item Escreveu R5 como $x_1+x_5\le x_3$? Errado: com $x_1=1,\ x_5=0$, isso exige $x_3=1$. A versão certa é
+  $x_1+x_5-x_3\le1$.
+\end{itemize}
+\end{atencao}
+
+\section{Experimento: agregada $\times$ desagregada}
+
+As duas versões de R4 têm \textbf{exatamente as mesmas soluções inteiras}. Qual é ``melhor''?
+
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+& valor da relaxação & solução da relaxação\\
+\midrule
+ótimo inteiro & 21 & $\{1,2,4\}$\\
+agregada (a) & 23,71 & $x=(0{,}57;\ 0{,}43;\ 0{,}29;\ 1;\ 0{,}71)$\\
+desagregada (b) & 22,5 & $x=(0{,}5;\ 0{,}5;\ 0{,}5;\ 0{,}5;\ 1)$\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Explicação.} Somando as três restrições de (b), $x_2\le x_1$, $x_3\le x_1$ e $x_4\le x_1$, obtemos
+$x_2+x_3+x_4\le3x_1$, que é (a). Logo \emph{todo} ponto que satisfaz (b) satisfaz (a): o poliedro de (b) está
+\textbf{dentro} do de (a), e (b) é uma formulação \textbf{mais forte} (Seção~\ref{sec:formulacoes}). A recíproca é
+falsa: o ponto $x_1=\tfrac13$, $x_2=1$, $x_3=x_4=0$ satisfaz (a) ($1\le1$) mas viola (b) ($1\not\le\tfrac13$).
+Com $x_1$ pequeno, (a) ainda deixa um dos outros inteiro; (b) amarra cada um individualmente.
+
+\begin{resumo}[Lições do Bloco 3]
+\begin{itemize}
+  \item Menor limite superior = relaxação mais forte = menos nós no \emph{branch-and-bound}.
+  \item A formulação desagregada tem \emph{mais} restrições e mesmo assim é \emph{melhor}: ``menos restrições''
+  não significa ``modelo melhor''.
+  \item Com (b), a R3 ($x_2\le x_1$) fica \textbf{redundante}, porque já aparece em R4. Com (a), ela ainda fortalece a
+  relaxação.
+\end{itemize}
+\end{resumo}

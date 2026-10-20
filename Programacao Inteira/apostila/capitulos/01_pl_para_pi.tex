@@ -1,0 +1,191 @@
+\chapter{Da programação linear à programação inteira}
+\label{cap:pl-pi}
+
+\begin{flushright}
+\begin{minipage}{0.75\linewidth}\itshape\small
+``A arte de formular programas lineares e lineares inteiros é, bem, uma arte: é difícil de ensinar e ainda mais
+difícil de aprender.''
+\end{minipage}\\[2pt]
+{\small --- G.~G.~Brown e R.~F.~Dell~\cite{browndell2007}, citados em~\cite{ravelo}}
+\end{flushright}
+
+A boa notícia é que essa arte tem técnicas que se repetem. O objetivo desta apostila é apresentá-las uma a uma,
+com exemplos.
+
+\section{Relembrando: o que é um problema de programação linear}
+
+Um problema de \textbf{programação linear} (PL) tem três ingredientes:
+\begin{enumerate}
+  \item \textbf{Variáveis de decisão}: os números que queremos escolher (quanto produzir, quanto transportar\ldots).
+  \item \textbf{Função objetivo}: uma expressão \emph{linear} nas variáveis que queremos maximizar ou minimizar.
+  \item \textbf{Restrições}: desigualdades ou igualdades \emph{lineares} que as variáveis precisam respeitar.
+\end{enumerate}
+``Linear'' significa que cada variável aparece apenas multiplicada por uma constante e somada às outras: $3x_1 + 2x_2$
+é linear; $x_1x_2$, $x_1^2$, $\sqrt{x_1}$ e $\max\{x_1,x_2\}$ não são.
+
+\begin{exemplo}[produção de fósforos (slides)]
+Uma empresa produz caixas de fósforos longos (lucro 3 por caixa) e curtos (lucro 2), em unidades de 100\,000 caixas.
+Sejam $x_1$ e $x_2$ as quantidades produzidas.
+\[
+\begin{aligned}
+\max\;& 3x_1 + 2x_2\\
+\sa & x_1 + x_2 \le 9 &&\text{(capacidade da máquina)}\\
+    & 3x_1 + x_2 \le 18 &&\text{(madeira disponível)}\\
+    & x_1 \le 7,\quad x_2 \le 6 &&\text{(caixas disponíveis)}\\
+    & x_1, x_2 \ge 0.
+\end{aligned}
+\]
+Os pontos que satisfazem todas as restrições formam a \textbf{região viável}, um polígono convexo. O teorema
+fundamental da PL garante que, se existe ótimo, existe um ótimo em um \textbf{vértice} desse polígono, e é isso que o
+método simplex explora. Os vértices aqui são $(0,0)$, $(6,0)$, $(4{,}5;\,4{,}5)$, $(3,6)$ e $(0,6)$, com valores
+$0$, $18$, $22{,}5$, $21$ e $12$. O ótimo é $x_1=x_2=4{,}5$, ou seja, \textbf{450\,000 caixas de cada tipo}.
+
+\emph{O valor fracionário é um problema?} Não: a unidade é ``100\,000 caixas'', então 4,5 significa 450\,000
+caixas. Variáveis contínuas são uma \emph{aproximação realista} aqui.
+\end{exemplo}
+
+\section{Quando as variáveis precisam ser inteiras}
+
+Agora imagine que a variável é o número de aviões que uma companhia compra, de enfermeiras escaladas para um turno ou
+de caminhões enviados a um porto. Não existe ``3,7 aviões''. Land e Doig, no artigo que deu origem ao método
+\emph{branch-and-bound}, já diziam que problemas com variáveis inteiras surgem sempre que há
+\textbf{indivisibilidades}.
+
+Há dois motivos bem diferentes para usar variáveis inteiras, e vale a pena separá-los desde já:
+\begin{enumerate}
+  \item \textbf{Natureza do problema}: a quantidade é indivisível (aviões, pessoas, veículos). É o
+  ``motivo óbvio''.
+  \item \textbf{Artifício de modelagem}: usamos variáveis \emph{binárias} (que só valem 0 ou 1) para representar
+  \textbf{decisões} (abrir ou não uma fábrica) e \textbf{lógica} (``se\ldots então'', ``ou'', ``no máximo $k$'',
+  custo fixo\ldots) dentro de um modelo que continua linear. É o \textbf{foco do notebook} a partir do Bloco~1.
+\end{enumerate}
+
+\begin{outros}[a mesma distinção no livro do MIT]
+Bradley, Hax e Magnanti~\cite[Seç.~9.2]{amp} fazem a mesma separação. De um lado, a inteireza ``pela natureza do
+problema'', com o exemplo de decidir quantos porta-aviões nucleares uma marinha deve ter: a resposta é da ordem de
+um ou dois, e uma fração não teria significado. De outro, variáveis inteiras que surgem de (i) \emph{condições
+lógicas} (``se um novo produto for desenvolvido, então uma nova fábrica deve ser construída'') e (ii)
+\emph{não linearidades} como custos fixos. Os autores chamam as binárias de variáveis ``sim/não'' (\emph{go--no-go}),
+típicas de decisões estratégicas de alto custo, como investimentos.
+\end{outros}
+
+\section{As classes de problemas}
+
+\begin{definicao}[tipos de problemas inteiros]
+Seja $x$ um vetor de variáveis contínuas e $y$ um vetor de variáveis inteiras.
+\begin{itemize}
+  \item \textbf{Programação linear inteira mista (PLIM)}: há variáveis contínuas \emph{e} inteiras.
+  \[ \max\; cx + dy \quad \sa Ax + Gy \le b,\;\; x \ge 0,\;\; y \ge 0 \text{ e inteiro.}\]
+  \item \textbf{Programação linear inteira (PLI)}: todas as variáveis são inteiras.
+  \[ \max\; cx \quad \sa Ax \le b,\;\; x \in \Z^n_+.\]
+  \item \textbf{Programação binária (PB ou 0--1)}: todas as variáveis são binárias.
+  \[ \max\; cx \quad \sa Ax \le b,\;\; x \in \B^n.\]
+\end{itemize}
+\end{definicao}
+
+Uma família muito importante de problemas é a de \textbf{otimização combinatória}: temos um conjunto finito
+$N=\{1,\dots,n\}$ de ``elementos'' (itens, arestas, tarefas\ldots), cada um com um valor $c_j$, e uma família
+$\mathcal{F}$ de subconjuntos \emph{viáveis} de $N$. Queremos o melhor subconjunto viável:
+\[
+\max_{S\subseteq N}\Big\{\sum_{j\in S} c_j \;:\; S\in\mathcal{F}\Big\}.
+\]
+A mochila (escolher itens que cabem), o caixeiro viajante (escolher arestas que formam um ciclo) e o \emph{bin
+packing} são exemplos. Quase sempre eles são escritos como \textbf{programas binários}: $x_j=1$ se $j\in S$.
+
+\begin{atencao}[``finito'' não quer dizer ``fácil'']
+Com $n$ itens, há $2^n$ subconjuntos. Para $n=60$, são mais de $10^{18}$ possibilidades: enumerar todas, mesmo a
+um bilhão por segundo, levaria mais de 30 anos. Por isso precisamos de bons modelos e de algoritmos como o
+\emph{branch-and-bound} (Seção~\ref{sec:bb}).
+\end{atencao}
+
+\section{Um primeiro modelo inteiro, do zero}
+
+\begin{exemplo}[aluguel de veículos para uma excursão]
+Um centro acadêmico precisa transportar \textbf{50 pessoas}. Pode alugar vans (12 lugares, R\$ 250 cada) e ônibus
+(30 lugares, R\$ 600 cada). Quantos de cada para gastar o mínimo?
+
+\textbf{Passo 1 -- variáveis.} $v$ = número de vans e $o$ = número de ônibus. Não se aluga meia van:
+$v,o\in\Z_+$.
+
+\textbf{Passo 2 -- restrições.} Os lugares precisam bastar: $12v + 30o \ge 50$.
+
+\textbf{Passo 3 -- objetivo.} $\min\; 250v + 600o$.
+
+\textbf{Passo 4 -- resolver.} Se ignorarmos a inteireza (PL), o ônibus custa $600/30=20$ por lugar e a van
+$250/12\approx 20{,}83$; a PL usa só ônibus: $o=50/30\approx1{,}67$, custo $1000$. Como o problema é pequeno,
+podemos enumerar as opções inteiras com o mínimo de vans para cada número de ônibus:
+\begin{center}
+\begin{tabular}{cccc}
+\toprule
+$o$ & menor $v$ com $12v \ge 50-30o$ & lugares & custo\\
+\midrule
+0 & 5 & 60 & 1250\\
+1 & 2 & 54 & \textbf{1100}\\
+2 & 0 & 60 & 1200\\
+\bottomrule
+\end{tabular}
+\end{center}
+O ótimo inteiro é \textbf{1 ônibus e 2 vans (R\$ 1100)}. Repare que ``arredondar a PL'' ($o=1{,}67\to2$) dá R\$ 1200:
+é viável, mas \emph{não é ótimo}. E o valor da PL (1000) é menor que o ótimo inteiro (1100), porque a PL tem mais
+liberdade. Essas duas observações são o tema dos próximos dois capítulos.
+\end{exemplo}
+
+\section{Um pouco de história}
+
+Os métodos que o solver do notebook usa têm mais de 60 anos, e vários dos problemas desta apostila são, eles
+mesmos, marcos históricos.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=0.18cm,
+  ev/.style={font=\scriptsize,align=center,text width=2.35cm,inner sep=1pt}]
+  \draw[thick,-{Stealth}] (0,0) -- (88,0);
+  \foreach \ano/\pos/\lado/\txt in {
+      6/1939/above/{Kantorovich: planejamento da produção (modelo de corte e empacotamento)},
+      14/1947/below/{Dantzig: método simplex},
+      23/1956/above/{Smith: regra ótima para uma máquina (WSPT)},
+      33/1958/below/{Dantzig (1957): limite da mochila; Gomory (1958): planos de corte},
+      44/1960/above/{Land e Doig: \emph{branch-and-bound}},
+      54/1965/below/{Dakin: ramificação $x\le\lfloor v\rfloor$ / $x\ge\lceil v\rceil$},
+      68/{fim dos anos 1990}/above/{solvers comerciais combinam B\&B e planos de corte (\emph{branch-and-cut})},
+      82/2020/below/{2001--2020: solvers de PLIM $\approx$1000$\times$ mais rápidos}}
+  { \fill[azul] (\ano,0) circle (2pt);
+    \ifthenelse{\equal{\lado}{above}}
+      {\draw (\ano,0) -- (\ano,0.55); \node[ev,above] at (\ano,0.55) {\textbf{\pos}\\ \txt};}
+      {\draw (\ano,0) -- (\ano,-0.55); \node[ev,below] at (\ano,-0.55) {\textbf{\pos}\\ \txt};} }
+\end{tikzpicture}
+\caption{Alguns marcos da programação inteira citados nesta apostila. Fontes: Kantorovich~\cite{kantorovich1960};
+Smith~\cite{smith1956}; Dantzig~\cite{dantzig1957}; Gomory~\cite{gomory1958}; Land e Doig~\cite{landdoig1960};
+Dakin~\cite{dakin1965}; Bixby~\cite{bixby2012}; Koch et al.~\cite{koch2022}. (Posições fora de escala.)}
+\label{fig:historia}
+\end{figure}
+
+\begin{outros}[Ailsa Land e Alison Doig]
+O \emph{branch-and-bound} nasceu de um trabalho contratado pela British Petroleum na London School of Economics, para
+melhorar modelos de PL de refinarias em que algumas variáveis precisavam ser inteiras. O artigo de Land e Doig saiu
+na \emph{Econometrica} em 1960~\cite{landdoig1960}. Ailsa Land foi a primeira mulher a ser professora titular de
+Pesquisa Operacional na Grã-Bretanha~\cite{informsland}. A ideia de resolver relaxações lineares e dividir o problema
+em subproblemas ainda é a espinha dorsal dos solvers modernos.
+\end{outros}
+
+\begin{resumo}
+\begin{itemize}
+  \item PL: variáveis contínuas, tudo linear, ótimo em vértice, resolvida eficientemente pelo simplex.
+  \item PI: algumas (PLIM) ou todas (PLI) as variáveis são inteiras; PB quando são todas binárias.
+  \item Inteireza aparece por \emph{natureza} (indivisibilidade) ou como \emph{ferramenta de modelagem} (binárias
+  para decisões e lógica).
+\end{itemize}
+\end{resumo}
+
+\section*{Exercícios de fixação}
+\addcontentsline{toc}{section}{Exercícios de fixação}
+\begin{enumerate}[label=\textbf{1.\arabic*}]
+  \item Classifique como PL, PLIM, PLI ou PB: (a) escolher quais de 10 projetos financiar; (b) decidir quantas
+  unidades inteiras produzir de cada brinquedo e se compra ou não cada molde; (c) escolher valores contínuos
+  $x_1,x_2$ e uma binária $y$ que diz qual de duas restrições vale.
+  \item Para cada grandeza, diga se uma variável contínua é uma boa aproximação ou se precisamos de inteiros ou
+  binários: (a) toneladas de café transportadas; (b) número de caminhões; (c) abrir ou não um armazém;
+  (d) litros de combustível.
+  \item No exemplo das vans, mude o preço da van para R\$ 300. O ótimo inteiro muda? Arredondar a PL passa a dar o
+  ótimo?
+\end{enumerate}
