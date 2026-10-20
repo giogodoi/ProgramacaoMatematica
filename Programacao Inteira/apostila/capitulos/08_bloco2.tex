@@ -1,0 +1,287 @@
+\chapter{Bloco 2 -- Restrições disjuntivas}
+\label{cap:bloco2}
+
+Às vezes queremos que \textbf{apenas uma} entre duas restrições valha (``ou isto, ou aquilo''). O conjunto viável
+deixa de ser convexo, e nenhuma PL pura consegue representá-lo. Com uma binária $y$:
+
+\begin{receita}[disjunção ``$f(x)\le0$ OU $g(x)\le0$'']
+\[
+f(x)\le M_1(1-y),\qquad g(x)\le M_2\,y,\qquad y\in\B.
+\]
+\begin{itemize}
+  \item $y=1$: a primeira vira $f(x)\le0$ (ativa) e a segunda vira $g(x)\le M_2$ (desligada).
+  \item $y=0$: a primeira vira $f(x)\le M_1$ (desligada) e a segunda vira $g(x)\le0$ (ativa).
+\end{itemize}
+$M_1$ precisa ser grande o suficiente para não cortar nada quando $g$ está ativa, e vice-versa.
+\end{receita}
+
+\section{2A -- Modos de operação}
+
+\paragraph{O problema.} Uma linha de produção opera no \textbf{modo A} (limite de energia: $4x_1+2x_2\le80$)
+\textbf{ou} no \textbf{modo B} (limite de insumo: $2x_1+5x_2\le100$); não precisa respeitar os dois ao mesmo tempo.
+O contrato exige $x_1\ge10$. Maximizar $2x_1+3x_2$.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=0.13]
+  \fill[azul!30] (10,0) -- (20,0) -- (10,20) -- cycle;
+  \fill[verde!30] (10,0) -- (50,0) -- (10,16) -- cycle;
+  \fill[azul!30,opacity=0.7] (10,0) -- (20,0) -- (10,20) -- cycle;
+  \draw[->] (-1,0) -- (58,0) node[right] {$x_1$};
+  \draw[->] (0,-1) -- (0,26) node[above] {$x_2$};
+  \draw[dashed] (10,0) -- (10,24) node[above] {\small $x_1=10$};
+  \draw[azul,thick] (10,20) -- (20,0);
+  \draw[verde!60!black,thick] (10,16) -- (50,0);
+  \foreach \v in {10,20,30,40,50} \draw (\v,0.6) -- (\v,-0.6) node[below] {\small\v};
+  \foreach \v in {10,20} \draw (0.6,\v) -- (-0.6,\v) node[left] {\small\v};
+  \node[azul,font=\small,align=left] at (30,17) {modo A: $4x_1+2x_2\le80$};
+  \node[verde!50!black,font=\small] at (42,8) {modo B: $2x_1+5x_2\le100$};
+  \node[star,star points=5,fill=red,inner sep=1.8pt] at (50,0) {};
+  \node[red,font=\small] at (50,-4.5) {ótimo $(50,0)$};
+\end{tikzpicture}
+\caption{Região viável real do Bloco 2A: a \textbf{união} do triângulo do modo A (azul) com o triângulo do modo B
+(verde). A união não é convexa. O ótimo, com valor 100, está no modo B.}
+\end{figure}
+
+\begin{discussao}
+\begin{enumerate}
+  \item \emph{A região é convexa? Onde fica o ótimo?} Não é convexa (é a união de dois triângulos). Avaliando os
+  vértices: no modo A, $(10,20)$ vale $80$ e $(20,0)$ vale $40$; no modo B, $(50,0)$ vale $100$ e $(10,16)$ vale $68$.
+  O ótimo é $(50,0)$, com valor 100.
+  \item \emph{Para que valor de $y$ cada restrição está ativa?} Com $f(x)=4x_1+2x_2-80$ e
+  $g(x)=2x_1+5x_2-100$: $y=1$ ativa o modo A e $y=0$ ativa o modo B.
+  \item \emph{Qual o menor $M_1$ que nunca corta uma solução válida?} Quando $y=0$ (modo B), a restrição
+  $f(x)\le M_1$ precisa aceitar todo ponto do modo B. Então $M_1\ge\max\{f(x): x\in D,\ g(x)\le0\}$, onde
+  $D=\{x_1\ge10,\ x_2\ge0\}$. Isso é uma PL!
+\end{enumerate}
+\end{discussao}
+
+\subsection*{Exercício 2A-1: calcular $M_1$ e $M_2$ resolvendo duas PLs}
+
+\[
+M_1 = \max\{\,4x_1+2x_2-80 \;:\; 2x_1+5x_2\le100,\ x_1\ge10,\ x_2\ge0\,\},
+\]
+\[
+M_2 = \max\{\,2x_1+5x_2-100 \;:\; 4x_1+2x_2\le80,\ x_1\ge10,\ x_2\ge0\,\}.
+\]
+\textbf{À mão}, pelos vértices: para $M_1$, os vértices do triângulo B são $(10,0)$, $(50,0)$ e $(10,16)$, com
+$f=-40,\ 120,\ -8$, logo $M_1=120$. Para $M_2$, os vértices do triângulo A são $(10,0)$, $(20,0)$ e $(10,20)$, com
+$g=-80,\ -60,\ 20$, logo $M_2=20$.
+
+\textbf{No código}, a função recebe as \emph{funções} \py{obj} e \py{outra} (definidas com \py{lambda}) e as aplica às
+variáveis do PuLP. Isso funciona porque \py{4*x1 + 2*x2 - 80} com \py{x1, x2} sendo variáveis do PuLP gera uma
+expressão linear.
+
+\begin{codigo}
+f = lambda x1, x2: 4*x1 + 2*x2 - 80     # modo A:  f(x) <= 0
+g = lambda x1, x2: 2*x1 + 5*x2 - 100    # modo B:  g(x) <= 0
+
+def maximizar_sobre(obj, outra):
+    """max obj(x)  s.a.  x em D = {x1 >= 10, x2 >= 0}  e  outra(x) <= 0."""
+    prob = pulp.LpProblem("M", pulp.LpMaximize)
+    x1 = pulp.LpVariable("x1", lowBound=10)    # o domínio D já está nos limites
+    x2 = pulp.LpVariable("x2", lowBound=0)
+    prob += obj(x1, x2), "obj"                 # TODO: objetivo
+    prob += outra(x1, x2) <= 0, "outra_ativa"  # TODO: a outra restrição está ativa
+    return resolver(prob, mostrar=False)
+
+M1 = maximizar_sobre(f, g)     # 120.0
+M2 = maximizar_sobre(g, f)     # 20.0
+\end{codigo}
+
+\begin{atencao}[o domínio importa]
+$M_2$ só é tão pequeno (20) porque usamos $x_1\ge10$. Sem essa informação, o ponto $(0,40)$ seria do modo A e daria
+$g=100$. Quanto mais você souber sobre as variáveis, menor (e melhor) o $M$.
+\end{atencao}
+
+\subsection*{Exercício 2A-2: o modelo disjuntivo}
+
+\begin{codigo}
+def modelo_disjuntivo(M1, M2):
+    prob = pulp.LpProblem("disjuntivo", pulp.LpMaximize)
+    x1 = pulp.LpVariable("x1", lowBound=10)
+    x2 = pulp.LpVariable("x2", lowBound=0)
+    y  = pulp.LpVariable("y", cat="Binary")     # y = 1 -> modo A ; y = 0 -> modo B
+    prob += 2*x1 + 3*x2, "obj"
+    prob += f(x1, x2) <= M1*(1 - y), "modoA"    # TODO
+    prob += g(x1, x2) <= M2*y,       "modoB"    # TODO
+    return prob, x1, x2, y
+\end{codigo}
+
+Resultado: \textbf{100}, em $x=(50,0)$ com $y=0$ (modo B). Antes de completar o TODO, a verificação mostra
+``Unbounded'': sem restrições além de $x_1\ge10$ e $x_2\ge0$, o objetivo cresce sem limite.
+
+\begin{atencao}[a chamada \py{rodar(modelo_disjuntivo, M1 or 120, M2 or 20)}]
+\py{M1 or 120} significa ``use \py{M1} se ele existir; se for \py{None} (exercício anterior incompleto), use 120''.
+Assim a verificação funciona mesmo que o 2A-1 não esteja pronto.
+\end{atencao}
+
+\subsection*{Leitura do gráfico: o que $M$ faz com a relaxação}
+
+Eliminando $y$ das duas restrições ($y\ge g/M_2$ e $y\le1-f/M_1$), a região da relaxação linear é
+\[
+\frac{f(x)}{M_1}+\frac{g(x)}{M_2}\le 1,\qquad f(x)\le M_1,\qquad g(x)\le M_2 .
+\]
+Quanto maiores os $M$, mais ``frouxa'' essa desigualdade e maior a região laranja do gráfico do notebook:
+\begin{center}
+\begin{tabular}{ccc}
+\toprule
+$(M_1,M_2)$ & limite da relaxação & ótimo inteiro\\
+\midrule
+$(120,20)$ & 100 & 100\\
+$(120,100)$ & 116 & 100\\
+$(500,500)$ & 285,7 & 100\\
+$(5000,5000)$ & 2214,3 & 100\\
+\bottomrule
+\end{tabular}
+\end{center}
+Com os $M$ mínimos, a relaxação já dá o ótimo exato (100). Com $M=5000$, o limite passa de 2200. E o que acontece com
+$M$ \textbf{menor} que o necessário (o \emph{slider} do notebook)? Com $M_1=50$, por exemplo, no modo B a restrição
+``desligada'' vira $4x_1+2x_2\le130$, que corta o ponto $(50,0)$. O ``ótimo'' cai para 82,5: \textbf{modelo errado}.
+
+\section{2B -- Escalonamento em uma máquina}
+
+\paragraph{O problema.} Seis tarefas, com tempo de processamento $p_j$ e peso $w_j$, numa única máquina. Duas
+tarefas nunca são processadas ao mesmo tempo. Queremos minimizar a soma ponderada dos tempos de término,
+$\sum_j w_jC_j$.
+\begin{center}
+\begin{tabular}{lcccccc}
+\toprule
+tarefa & J1 & J2 & J3 & J4 & J5 & J6\\
+\midrule
+$p_j$ & 4 & 3 & 6 & 2 & 5 & 3\\
+$w_j$ & 2 & 1 & 3 & 1 & 2 & 1\\
+$p_j/w_j$ & 2 & 3 & 2 & 2 & 2,5 & 3\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{discussao}
+\begin{enumerate}
+  \item \emph{Variáveis?} Início $s_j\ge0$ (contínua) e, para cada par $j<k$, uma binária de ordem:
+  $y_{jk}=1$ se $j$ vem antes de $k$, e $0$ se $k$ vem antes de $j$.
+  \item \emph{Onde está a disjunção?} Para cada par: \textbf{ou} $j$ termina antes de $k$ começar
+  ($s_j+p_j\le s_k$), \textbf{ou} $k$ termina antes de $j$ começar ($s_k+p_k\le s_j$).
+  \item \emph{Que $M$ vale?} Sem tempo ocioso desnecessário, tudo termina até $\sum_j p_j=23$. Então
+  $s_j+p_j-s_k\le23$ sempre, e $M=\sum_jp_j$ basta.
+  \item \emph{Existe regra simples?} Sim: a \textbf{regra de Smith} (WSPT). Sequenciar por $p_j/w_j$ crescente é
+  ótimo quando não há datas de liberação.
+\end{enumerate}
+\end{discussao}
+
+\subsection*{O modelo}
+\[
+\begin{aligned}
+\min\;& \sum_j w_j\,(s_j+p_j)\\
+\sa & s_j+p_j \le s_k + M(1-y_{jk}) &&\forall\, j<k \quad(\text{se }y_{jk}=1\text{: } j\text{ antes de }k)\\
+& s_k+p_k \le s_j + M\,y_{jk} &&\forall\, j<k \quad(\text{se }y_{jk}=0\text{: } k\text{ antes de }j)\\
+& s_j\ge0,\quad y_{jk}\in\B.
+\end{aligned}
+\]
+Como $C_j=s_j+p_j$, o objetivo é $\sum_jw_jC_j$. A disjunção vale para \textbf{cada par} $j<k$: são
+$\binom{6}{2}=15$ binárias e 30 restrições.
+
+\begin{codigo}
+def modelo_1maq(p, w, r=None):
+    n = len(p)
+    M = sum(p) + (max(r) if r else 0)
+    prob = pulp.LpProblem("maquina_unica", pulp.LpMinimize)
+    s = [pulp.LpVariable(f"s_{j}", lowBound=0) for j in range(n)]
+    y = {(j, k): pulp.LpVariable(f"y_{j}_{k}", cat="Binary")
+         for j in range(n) for k in range(j+1, n)}           # y=1: j antes de k
+
+    # TODO 1: objetivo  sum_j w_j * C_j,  C_j = s_j + p_j
+    prob += pulp.lpSum(w[j]*(s[j] + p[j]) for j in range(n)), "soma_ponderada"
+    # TODO 2: as duas restrições disjuntivas para cada par j < k
+    for (j, k), yjk in y.items():
+        prob += s[j] + p[j] <= s[k] + M*(1 - yjk), f"j{j}_antes_k{k}"
+        prob += s[k] + p[k] <= s[j] + M*yjk,       f"k{k}_antes_j{j}"
+    # TODO 3 (desafio): datas de liberação
+    if r:
+        for j in range(n):
+            prob += s[j] >= r[j], f"release_{j}"
+    return prob, s, y
+\end{codigo}
+
+\paragraph{Lendo o laço.} \py{y.items()} percorre os pares \py{((j, k), variável)}. Para cada par escrevemos as duas
+restrições: com $y_{jk}=1$ a primeira está ativa e a segunda fica desligada (folga $M$); com $y_{jk}=0$, o contrário.
+
+\paragraph{Resultado.} Ótimo \textbf{127}. Uma sequência ótima devolvida pelo solver:
+\begin{center}
+\begin{tikzpicture}[x=5.2mm,y=6mm]
+  \foreach \ini/\dur/\nome/\cor in {0/6/J3/azul,6/2/J4/verde,8/4/J1/laranja,12/5/J5/roxo,17/3/J6/cinza,20/3/J2/red!70!black}
+  { \fill[\cor!70] (\ini,0) rectangle ++(\dur,1); \draw (\ini,0) rectangle ++(\dur,1);
+    \node[white,font=\bfseries\small] at (\ini+\dur/2,0.5) {\nome}; }
+  \draw[->] (0,0) -- (24.5,0) node[right] {\small $t$};
+  \foreach \t in {0,6,8,12,17,20,23} \node[below,font=\footnotesize] at (\t,0) {\t};
+\end{tikzpicture}
+\end{center}
+Conferindo: $3\cdot6+1\cdot8+2\cdot12+2\cdot17+1\cdot20+1\cdot23=18+8+24+34+20+23=127$. A regra de Smith (ordem
+J1, J3, J4, J5, J2, J6) também dá 127. Há empates nas razões, logo várias sequências ótimas.
+
+\begin{outros}[por que a regra de Smith funciona: o argumento da troca]
+A regra foi publicada por W.~E.~Smith em 1956~\cite{smith1956}. A prova clássica é por \textbf{troca de vizinhos}.
+Suponha uma sequência em que $j$ vem imediatamente antes de $k$, começando no instante $t$, e compare com a sequência
+que só troca os dois:
+\begin{center}
+\begin{tikzpicture}[x=6mm,y=5mm]
+  \node[left,font=\small] at (0,0.5) {antes:};
+  \fill[black!10] (0,0) rectangle (2,1); \node[font=\scriptsize] at (1,0.5) {\ldots};
+  \fill[azul!40] (2,0) rectangle (6,1); \node[font=\small] at (4,0.5) {$j$ ($p_j$)};
+  \fill[laranja!40] (6,0) rectangle (9,1); \node[font=\small] at (7.5,0.5) {$k$ ($p_k$)};
+  \fill[black!10] (9,0) rectangle (11,1); \node[font=\scriptsize] at (10,0.5) {\ldots};
+  \node[below,font=\scriptsize] at (2,0) {$t$};
+  \node[left,font=\small] at (0,-1.5) {depois:};
+  \fill[black!10] (0,-2) rectangle (2,-1); \node[font=\scriptsize] at (1,-1.5) {\ldots};
+  \fill[laranja!40] (2,-2) rectangle (5,-1); \node[font=\small] at (3.5,-1.5) {$k$};
+  \fill[azul!40] (5,-2) rectangle (9,-1); \node[font=\small] at (7,-1.5) {$j$};
+  \fill[black!10] (9,-2) rectangle (11,-1); \node[font=\scriptsize] at (10,-1.5) {\ldots};
+  \node[below,font=\scriptsize] at (2,-2) {$t$};
+  \node[right,font=\small,align=left] at (11.5,-0.5) {o resto da sequência\\ não muda};
+\end{tikzpicture}
+\end{center}
+As outras tarefas terminam nos mesmos instantes. Só mudam as contribuições de $j$ e $k$:
+\[
+\Big(\underbrace{w_j(t+p_j)+w_k(t+p_j+p_k)}_{j\text{ antes de }k}\Big) - \Big(\underbrace{w_k(t+p_k)+w_j(t+p_k+p_j)}_{k\text{ antes de }j}\Big)
+= w_kp_j - w_jp_k .
+\]
+Colocar $j$ antes de $k$ não é pior exatamente quando $w_kp_j\le w_jp_k$, isto é,
+$\dfrac{p_j}{w_j}\le\dfrac{p_k}{w_k}$. Numa sequência ótima, então, as razões aparecem em ordem crescente.
+O argumento \emph{falha} com datas de liberação: trocar $j$ e $k$ pode obrigar a máquina a esperar.
+\end{outros}
+
+\subsection*{Desafio: datas de liberação}
+
+Agora a tarefa $j$ só pode começar em $s_j\ge r_j$, com $r=(5,0,12,0,0,0)$. Basta o TODO 3 acima, mas o $M$ também
+precisa crescer: a máquina pode ficar ociosa esperando uma liberação, então usamos $M=\sum p_j+\max r_j$.
+
+\paragraph{Resultado.} Ótimo \textbf{135} (confirmado pela força bruta sobre as $6!=720$ permutações). Uma
+sequência ótima:
+\begin{center}
+\begin{tikzpicture}[x=5.2mm,y=6mm]
+  \foreach \ini/\dur/\nome/\cor in {0/2/J4/verde,2/5/J5/roxo,7/4/J1/laranja,11/3/J2/red!70!black,14/6/J3/azul,20/3/J6/cinza}
+  { \fill[\cor!70] (\ini,0) rectangle ++(\dur,1); \draw (\ini,0) rectangle ++(\dur,1);
+    \node[white,font=\bfseries\small] at (\ini+\dur/2,0.5) {\nome}; }
+  \draw[->] (0,0) -- (24.5,0) node[right] {\small $t$};
+  \foreach \t in {0,2,7,11,14,20,23} \node[below,font=\footnotesize] at (\t,0) {\t};
+  \draw[dashed,red] (5,-0.2) -- (5,1.5) node[above,font=\footnotesize] {$r_1=5$};
+  \draw[dashed,red] (12,-0.2) -- (12,1.5) node[above,font=\footnotesize] {$r_3=12$};
+\end{tikzpicture}
+\end{center}
+A regra de Smith deixa de ser ótima: ela quer começar por J1 ou J3, que ainda não foram liberadas. (O valor 127 que
+o notebook imprime para ``Smith ignorando $r$'' é o de uma sequência que \emph{viola} as liberações.)
+
+\begin{atencao}[erros típicos do Bloco 2]
+\begin{itemize}
+  \item Trocar $y$ e $1-y$ entre as duas restrições do mesmo par. Às vezes o modelo ainda funciona por simetria, mas
+  a interpretação de $y$ fica invertida, e no 2A o modo errado é ligado.
+  \item Usar $M$ que não cobre o maior $r_j$ no desafio: corta sequências válidas.
+  \item Escrever a disjunção só para pares consecutivos $(j,j+1)$: ela precisa valer para \textbf{todo} par $j<k$.
+  \item No 2A-1, esquecer que $x_1\ge10$ faz parte do domínio: o $M$ calculado fica maior que o necessário.
+\end{itemize}
+\end{atencao}
+
+\begin{resumo}[Conexão com a lista]
+A ideia de ordenar pares de tarefas com binárias e \emph{big-M} é exatamente a das restrições de ordenação do
+\emph{flowshop} permutacional (exercício 4 da lista de prática).
+\end{resumo}
