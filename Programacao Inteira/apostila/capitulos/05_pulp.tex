@@ -1,0 +1,142 @@
+\chapter{PuLP: do modelo no papel ao código}
+\label{cap:pulp}
+
+O notebook usa o \textbf{PuLP 2.9.0}, uma biblioteca Python de código aberto do projeto COIN-OR para
+\emph{escrever} modelos~\cite{pulp2011}, junto com o solver \textbf{CBC} (\emph{COIN-OR Branch and Cut}), que já vem
+instalado com ela e faz o \emph{branch-and-cut} (Capítulo~\ref{cap:relaxacao}). O PuLP só \emph{descreve} o modelo:
+quem resolve é o solver, e trocar de solver (GLPK, HiGHS, Gurobi\ldots) exige mudar apenas a chamada de
+\py{solve}. A primeira célula do notebook instala a
+versão certa (no Colab, pode ser preciso reiniciar a sessão uma vez).
+
+\section{Anatomia de um modelo}
+
+Vamos escrever o exemplo das vans e ônibus do Capítulo~\ref{cap:pl-pi} em PuLP, linha por linha.
+
+\begin{codigo}
+import pulp
+
+# 1) o problema: nome e sentido (LpMinimize ou LpMaximize)
+prob = pulp.LpProblem("excursao", pulp.LpMinimize)
+
+# 2) as variáveis: nome, limites e tipo (cat)
+v = pulp.LpVariable("vans",   lowBound=0, cat="Integer")
+o = pulp.LpVariable("onibus", lowBound=0, cat="Integer")
+
+# 3) a função objetivo: a PRIMEIRA expressão (sem <=, >=, ==) somada ao problema
+prob += 250*v + 600*o, "custo"
+
+# 4) as restrições: expressões com <=, >= ou ==, cada uma com um nome único
+prob += 12*v + 30*o >= 50, "lugares"
+
+# 5) resolver com o CBC (msg=0 silencia o log)
+prob.solve(pulp.PULP_CBC_CMD(msg=0))
+
+# 6) ler a solução
+print(pulp.LpStatus[prob.status])          # 'Optimal'
+print(v.varValue, o.varValue)              # 2.0 1.0
+print(pulp.value(prob.objective))          # 1100.0
+\end{codigo}
+
+\begin{description}[style=nextline]
+  \item[\py{LpProblem(nome, sentido)}] cria o modelo vazio.
+  \item[\py{LpVariable(nome, lowBound, upBound, cat)}] cria uma variável. \py{cat} pode ser
+  \py{"Continuous"} (padrão), \py{"Integer"} ou \py{"Binary"}; também existem as constantes
+  \py{pulp.LpContinuous} e \py{pulp.LpInteger}. Sem \py{lowBound} a variável pode ser negativa!
+  \item[\py{prob += expressão, "nome"}] se a expressão não tem comparação, ela vira a \textbf{função objetivo}; se tem
+  (\py{<=}, \py{>=}, \py{==}), vira uma \textbf{restrição}.
+  \item[\py{pulp.lpSum(...)}] soma eficiente de muitos termos (equivale a $\sum$).
+  \item[\py{prob.status}] 1 = ótimo (\texttt{Optimal}); outros: \texttt{Infeasible}, \texttt{Unbounded},
+  \texttt{Not Solved}.
+  \item[\py{x.varValue}] valor da variável na solução; \py{pulp.value(prob.objective)} é o valor ótimo.
+\end{description}
+
+\section{Índices, somatórios e dicionários}
+
+Modelos reais têm muitas variáveis indexadas. O padrão do notebook é criar listas ou dicionários por
+\emph{compreensão} e usar \py{lpSum} com geradores.
+
+\begin{codigo}
+n = 3
+lucro = [20, 15, 10]
+# lista de variáveis x[0], x[1], x[2]
+x = [pulp.LpVariable(f"x_{i}", lowBound=0, cat="Integer") for i in range(n)]
+# dicionário indexado por pares (i, j)
+y = {(i, j): pulp.LpVariable(f"y_{i}_{j}", cat="Binary")
+     for i in range(n) for j in range(n)}
+
+prob += pulp.lpSum(lucro[i]*x[i] for i in range(n)), "lucro"     # sum_i p_i x_i
+for j in range(n):                                               # uma restrição por j
+    prob += pulp.lpSum(y[i, j] for i in range(n)) == 1, f"um_por_coluna_{j}"
+\end{codigo}
+
+\begin{receita}[do papel para o código]
+\begin{tabular}{ll}
+$\sum_{i} p_i x_i$ & \py{pulp.lpSum(p[i]*x[i] for i in range(n))}\\
+``para todo $j$'' ($\forall j$) & um laço \py{for j in ...:} com um \py{prob +=} dentro\\
+$x_{ij}$ & \py{x[i, j]} (dicionário com chave tupla)\\
+$\sum_{k:\,\text{condição}} x_k$ & \py{pulp.lpSum(x[k] for k in K if condição)}\\
+\end{tabular}
+\end{receita}
+
+\section{Armadilhas comuns em PuLP}
+
+\begin{atencao}[o que o solver \emph{não} aceita]
+\begin{itemize}
+  \item \textbf{Desigualdades estritas e ``diferente'':} não existem \py{<}, \py{>} nem \py{!=} em PL/PI. Use
+  \py{>= 1} no lugar de \py{> 0} para inteiros, e reescreva ``$\ne$'' com binárias.
+  \item \textbf{Produtos de variáveis:} \py{x*y} com $x$ e $y$ variáveis \emph{não é linear} (o PuLP dá erro).
+  Linearize (Bloco 5 mostra como).
+  \item \textbf{\py{if} sobre variáveis:} \py{if x.varValue > 0:} dentro do modelo não funciona, porque na hora de
+  construir o modelo a variável ainda não tem valor. \py{if} só pode depender de \emph{dados}. Lógica sobre variáveis
+  é feita com binárias e restrições.
+  \item \textbf{Nomes repetidos:} duas restrições com o mesmo nome geram erro. Use f-strings com o índice:
+  \py{f"capacidade_{i}"}.
+  \item \textbf{Esquecer o objetivo:} sem objetivo, o notebook avisa ``Falta definir a função objetivo''.
+  \item \textbf{Esquecer restrições:} o modelo pode ficar ilimitado (\texttt{Unbounded}), como acontece no Bloco 2
+  se você rodar a verificação antes de completar o \py{TODO}.
+\end{itemize}
+\end{atencao}
+
+\section{As funções auxiliares do notebook}
+\label{sec:auxiliares}
+
+A terceira célula do notebook (``Funções auxiliares'') define ferramentas usadas em todas as verificações. Você não
+precisa alterá-las, mas precisa saber o que fazem.
+
+\begin{description}[style=nextline]
+  \item[\py{resolver(prob, mostrar=True, variaveis=True)}] resolve com o CBC, imprime o status, o valor do objetivo, o
+  tempo e as variáveis não nulas, e \textbf{devolve o valor ótimo} (ou \py{None} se não for ótimo ou se o modelo
+  estiver incompleto).
+  \item[\py{rodar(construtor, *args, **kwargs)}] chama a sua função construtora (por exemplo,
+  \py{modelo_fabrica}), pega o \py{prob} que ela devolve (sozinho ou como primeiro item de uma tupla) e chama
+  \py{resolver}. É por isso que todas as funções de exercício terminam com \py{return prob, ...}.
+  \item[\py{relaxado(prob)} e \py{valor_relaxado(prob)}] \py{relaxado} é um gerenciador de contexto
+  (\py{with}) que transforma todas as variáveis em contínuas e as restaura no fim; \py{valor_relaxado} usa-o para
+  devolver o valor da \textbf{relaxação linear}. Binárias continuam com limites $[0,1]$.
+  \item[\py{conferir(chave, obtido, dica="")}] compara o valor obtido com o gabarito \py{ESPERADO[chave]} (com
+  tolerância relativa de $10^{-4}$) e imprime ``correto'', ``não bate'' (com a dica) ou ``ainda sem solução''.
+\end{description}
+
+\begin{exemplo}[o padrão de todos os exercícios]
+\begin{codigo}
+def modelo_exemplo(dados, opcao=False):
+    prob = pulp.LpProblem("exemplo", pulp.LpMaximize)
+    x = ...                     # variáveis
+    prob += ...                 # objetivo
+    prob += ...                 # restrições
+    if opcao:                   # variações do exercício (regra extra, simetria...)
+        prob += ...
+    return prob, x              # rodar() usa o primeiro item
+
+obj = rodar(modelo_exemplo, dados, opcao=True)   # constrói, resolve e imprime
+conferir("chave_do_gabarito", obj)               # compara com o gabarito
+\end{codigo}
+\end{exemplo}
+
+\section*{Exercício de fixação}
+\addcontentsline{toc}{section}{Exercício de fixação}
+\begin{enumerate}[label=\textbf{5.\arabic*}]
+  \item Escreva em PuLP o problema de Wolsey (Seção~\ref{sec:wolsey}) com um parâmetro \py{inteiro} que escolhe entre
+  variáveis inteiras e contínuas. (É exatamente o primeiro exercício do notebook; a resposta está no
+  Capítulo~\ref{cap:bloco0}.)
+\end{enumerate}
